@@ -2,7 +2,7 @@
 @import url("/src/assets/colors/colors.css");
 
 .participantsTable {
-  width: 1243px;
+  width: auto;
   height: 456px;
   background: white;
   border: 1px solid #d5e2f1;

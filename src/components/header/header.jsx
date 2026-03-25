@@ -2,7 +2,9 @@ import "./header.css";
 import Navigation from "./navigation/Navigation";
 import logoSibLions from "../../assets/logoSibLions.svg";
 
-export default function Header({ currentPage, onPageChange }) {
+export default function Header({ currentPage, onPageChange, isUserLoggedIn }) {
+
+  
   return (
     <div className="headerWrapper">
       <header className="header">
@@ -14,7 +16,11 @@ export default function Header({ currentPage, onPageChange }) {
           />
         </div>
 
-        <Navigation currentPage={currentPage} onPageChange={onPageChange} />
+        <Navigation 
+          currentPage={currentPage} 
+          onPageChange={onPageChange}
+          isUserLoggedIn={isUserLoggedIn}
+        />
       </header>
     </div>
   );

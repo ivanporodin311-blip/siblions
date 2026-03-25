@@ -13,16 +13,20 @@
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
+    "crypto-js": "^4.2.0",
     "html2pdf.js": "^0.14.0",
     "jspdf": "^4.1.0",
     "jspdf-autotable": "^5.0.7",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-router-dom": "^7.13.1",
     "recharts": "^3.7.0",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "zustand": "^5.0.12"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@types/crypto-js": "^4.2.2",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",

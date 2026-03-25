@@ -1,0 +1,332 @@
+@import url("/src/assets/fonts/fonts.css");
+@import url("/src/assets/colors/colors.css");
+
+.eventDetailsPage {
+  padding: 20px;
+  max-width: 1308px;
+  margin: 0 auto;
+}
+
+.eventDetailsHeader {
+  margin-bottom: 40px;
+}
+
+.eventDetailsActions {
+  display: flex;
+  gap: 20px;
+  margin-top: 30px;
+  justify-content: flex-end;
+}
+
+/* Для страницы деталей - убираем курсор-указатель */
+.eventCard--details {
+  cursor: default;
+}
+
+.eventCard--details:hover {
+  cursor: default;
+  box-shadow: 0px 0px 6px 2px rgba(0, 52, 102, 0.42);
+  border-color: #eaeaea;
+}
+
+.eventCard--details:hover .ag-courses-item_bg {
+  transform: none;
+}
+
+.eventCard--details:hover .eventCard__title,
+.eventCard--details:hover .eventCard__location,
+.eventCard--details:hover .eventCard__date,
+.eventCard--details:hover .eventCard__time,
+.eventCard--details:hover .eventCard__separator {
+  color: inherit;
+}
+
+.editEventButton,
+.deleteEventButton,
+.backToEventsButton {
+  font-family: "Kontora", sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  padding: 12px 24px;
+  border-radius: 12px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.editEventButton {
+  background-color: var(--blueColor);
+  color: white;
+}
+
+.editEventButton:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.deleteEventButton {
+  background-color: #f44336;
+  color: white;
+}
+
+.deleteEventButton:hover {
+  background-color: #da190b;
+  transform: translateY(-1px);
+}
+
+.backToEventsButton {
+  background-color: var(--blueColor);
+  color: white;
+  margin-top: 20px;
+  display: inline-block;
+}
+
+.backToEventsButton:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.eventDetailsContent {
+  background: white;
+  border: 1px solid #d5e2f1;
+  border-radius: 25px;
+  overflow: hidden;
+}
+
+.eventDetailsCard {
+  padding: 40px;
+}
+
+.eventDetailsSection {
+  margin-bottom: 40px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid #d5e2f1;
+}
+
+.eventDetailsSection:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.eventDetailsSection h3 {
+  font-family: "Cantora One", sans-serif;
+  font-weight: 700;
+  font-size: 25px;
+  color: #003466;
+  margin: 0 0 25px 0;
+}
+
+.eventDetailsRow {
+  display: flex;
+  margin-bottom: 20px;
+  font-family: "Cantora One", sans-serif;
+  font-size: 25px;
+}
+
+.eventDetailsLabel {
+  width: 250px;
+  font-weight: 600;
+  color: #003466;
+  flex-shrink: 0;
+}
+
+.eventDetailsValue {
+  flex: 1;
+  color: #333;
+}
+
+.eventDetailsDescription {
+  color: #333;
+  background-color: #f8fbff;
+  padding: 20px;
+  border-radius: 14px;
+  font-family: "Cantora One", sans-serif;
+  font-size: 25px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.eventStatus {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 20px;
+  font-family: "Kontora", sans-serif;
+}
+
+.eventStatus.future {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.eventStatus.past {
+  background-color: #f5f5f5;
+  color: #757575;
+}
+
+.loadingContainer,
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+}
+
+.errorMessage {
+  font-family: "Kontora", sans-serif;
+  font-size: 25px;
+  color: #f44336;
+  margin: 20px 0;
+}
+
+/* Адаптивность */
+@media (max-width: 1300px) {
+  .eventDetailsCard {
+    padding: 30px 20px;
+  }
+  
+  .eventDetailsSection h3 {
+    font-size: 22px;
+  }
+  
+  .eventDetailsRow {
+    font-size: 22px;
+  }
+  
+  .eventDetailsLabel {
+    width: 220px;
+  }
+  
+  .eventDetailsDescription {
+    font-size: 22px;
+    padding: 16px;
+  }
+  
+  .eventStatus {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 992px) {
+  .eventDetailsLabel {
+    width: 200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .eventDetailsPage {
+    padding: 15px;
+  }
+  
+  .eventDetailsCard {
+    padding: 20px 15px;
+  }
+  
+  .eventDetailsSection {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+  }
+  
+  .eventDetailsSection h3 {
+    font-size: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .eventDetailsRow {
+    flex-direction: column;
+    font-size: 20px;
+    margin-bottom: 15px;
+  }
+  
+  .eventDetailsLabel {
+    width: auto;
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+  
+  .eventDetailsDescription {
+    font-size: 20px;
+    padding: 14px;
+  }
+  
+  .eventStatus {
+    font-size: 16px;
+    padding: 4px 12px;
+  }
+  
+  .eventDetailsActions {
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 20px;
+  }
+  
+  .editEventButton,
+  .deleteEventButton {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .loadingContainer p,
+  .errorMessage {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .eventDetailsPage {
+    padding: 10px;
+  }
+  
+  .eventDetailsCard {
+    padding: 16px;
+  }
+  
+  .eventDetailsSection h3 {
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+  
+  .eventDetailsRow {
+    font-size: 18px;
+  }
+  
+  .eventDetailsDescription {
+    font-size: 18px;
+    padding: 12px;
+  }
+  
+  .eventStatus {
+    font-size: 14px;
+  }
+  
+  .editEventButton,
+  .deleteEventButton,
+  .backToEventsButton {
+    font-size: 14px;
+    padding: 10px 20px;
+  }
+  
+  .loadingContainer p,
+  .errorMessage {
+    font-size: 18px;
+  }
+}
+
+/* Анимация */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.eventDetailsContent {
+  animation: fadeIn 0.3s ease-out;
+}

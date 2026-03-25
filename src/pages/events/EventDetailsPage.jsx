@@ -1,33 +1,32 @@
-import React, { useState, useEffect, useCallback } from "react";
-import "./personalAccount.css";
+import React, { useState, useEffect } from "react";
+import "./eventDetails.css";
 
-const PersonalAccountPage = ({ onAuthChange }) => {
+const PersonalAccountPage = ({ onAuthChange }) => { // Добавляем пропс onAuthChange
   const [userData, setUserData] = useState({
-    fullName: "",
-    position: "",
-    organization: "",
+    fullName: "Иванов Иван Иванович",
+    position: "Администратор",
+    organization: "ТПУ",
   });
   
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Загружаем данные при монтировании
+  // Загружаем данные пользователя (если есть в localStorage)
   useEffect(() => {
     const savedData = localStorage.getItem("userData");
     if (savedData) {
-      const parsedData = JSON.parse(savedData);
-      setUserData(parsedData);
+      setUserData(JSON.parse(savedData));
       setIsLoggedIn(true);
     }
   }, []);
 
-  // Уведомляем родителя когда isLoggedIn меняется
+  // Сохраняем изменения
   useEffect(() => {
-    if (onAuthChange) {
-      onAuthChange(isLoggedIn);
+    if (isLoggedIn) {
+      localStorage.setItem("userData", JSON.stringify(userData));
     }
-  }, [isLoggedIn, onAuthChange]);
+  }, [userData, isLoggedIn]);
 
-  const handleLogin = useCallback(() => {
+  const handleLogin = () => {
     const defaultUserData = {
       fullName: "Иванов Иван Иванович",
       position: "Администратор",
@@ -36,9 +35,10 @@ const PersonalAccountPage = ({ onAuthChange }) => {
     setUserData(defaultUserData);
     setIsLoggedIn(true);
     localStorage.setItem("userData", JSON.stringify(defaultUserData));
-  }, []);
+    if (onAuthChange) onAuthChange(true); // Уведомляем о входе
+  };
 
-  const handleLogout = useCallback(() => {
+  const handleLogout = () => {
     localStorage.removeItem("userData");
     setIsLoggedIn(false);
     setUserData({
@@ -47,7 +47,8 @@ const PersonalAccountPage = ({ onAuthChange }) => {
       organization: "",
     });
     alert("Вы вышли из аккаунта");
-  }, []);
+    if (onAuthChange) onAuthChange(false); // Уведомляем о выходе
+  };
 
   return (
     <section className="personalAccountPage">
