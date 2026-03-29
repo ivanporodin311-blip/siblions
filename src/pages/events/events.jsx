@@ -5,22 +5,23 @@ import FutureEventsButton from "./title/futureEventsButton/futureEventsButton";
 import PastEventsButton from "./title/pastEventsButton/pastEventsButton";
 import ModalAddWindow from "./modalAddWindow/modalAddWindow";
 import EventCard from "./EventCard/EventCard";
-import { getAllParticipants } from "../../utils/participantsManager";
+import useEventStore from "../../stores/eventStore"; // Импорт store
 
 function EventsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("create");
   const [editingEvent, setEditingEvent] = useState(null);
   const [activeTab, setActiveTab] = useState("future");
-  const [events, setEvents] = useState(() => {
-    const savedEvents = localStorage.getItem("events");
-    return savedEvents ? JSON.parse(savedEvents) : [];
-  });
+  
+  // Используем store вместо localStorage
+  const { events, loading, error, fetchEvents, createEvent, updateEvent, deleteEvent, clearError } = useEventStore();
 
+  // Загрузка событий при монтировании
   useEffect(() => {
-    getAllParticipants();
+    fetchEvents();
   }, []);
 
+  // Восстановление скролла
   useEffect(() => {
     const savedScroll = sessionStorage.getItem("eventsScrollPosition");
     if (savedScroll !== null) {
@@ -31,10 +32,6 @@ function EventsPage() {
       });
     }
   }, []);
-
-  useEffect(() => {
-    localStorage.setItem("events", JSON.stringify(events));
-  }, [events]);
 
   const handleAddClick = () => {
     setModalMode("create");
@@ -48,33 +45,24 @@ function EventsPage() {
     setIsModalOpen(true);
   };
 
-  const handleCreateEvent = (newEventData) => {
-    const newEvent = {
-      id: Date.now(),
-      ...newEventData,
-      organizers: newEventData.organizers || "",
-      createdAt: new Date().toISOString(),
-    };
-
-    setEvents((prevEvents) => [...prevEvents, newEvent]);
-    setIsModalOpen(false);
+  const handleCreateEvent = async (newEventData) => {
+    const result = await createEvent(newEventData);
+    if (result) {
+      setIsModalOpen(false);
+    }
   };
 
-  const handleUpdateEvent = (updatedEventData) => {
-    setEvents((prevEvents) =>
-      prevEvents.map((event) =>
-        event.id === editingEvent.id ? { ...event, ...updatedEventData } : event
-      )
-    );
-    setIsModalOpen(false);
-    setEditingEvent(null);
+  const handleUpdateEvent = async (updatedEventData) => {
+    const result = await updateEvent(editingEvent.id, updatedEventData);
+    if (result) {
+      setIsModalOpen(false);
+      setEditingEvent(null);
+    }
   };
 
-  const handleDeleteEvent = (eventId) => {
+  const handleDeleteEvent = async (eventId) => {
     if (window.confirm("Вы уверены, что хотите удалить это мероприятие?")) {
-      setEvents((prevEvents) =>
-        prevEvents.filter((event) => event.id !== eventId)
-      );
+      await deleteEvent(eventId);
     }
   };
 
@@ -88,7 +76,7 @@ function EventsPage() {
     const now = new Date();
     return events
       .filter((event) => {
-        const eventDate = new Date(event.date);
+        const eventDate = new Date(event.date || event.startDate);
         if (tab === "future") {
           return eventDate >= now;
         } else {
@@ -96,13 +84,40 @@ function EventsPage() {
         }
       })
       .sort((a, b) => {
-        const dateA = new Date(a.date);
-        const dateB = new Date(b.date);
+        const dateA = new Date(a.date || a.startDate);
+        const dateB = new Date(b.date || b.startDate);
         return dateA.getTime() - dateB.getTime();
       });
   };
 
   const displayedEvents = filterEvents(activeTab);
+
+  // Показ загрузки
+  if (loading && events.length === 0) {
+    return (
+      <section className="eventsPage">
+        <div className="eventsHeaderSection">
+          <TitleWithAddButton title="Мероприятия" onAddClick={handleAddClick} />
+        </div>
+        <div className="loadingSpinner">Загрузка мероприятий...</div>
+      </section>
+    );
+  }
+
+  // Показ ошибки
+  if (error) {
+    return (
+      <section className="eventsPage">
+        <div className="eventsHeaderSection">
+          <TitleWithAddButton title="Мероприятия" onAddClick={handleAddClick} />
+        </div>
+        <div className="errorMessage">
+          Ошибка: {error}
+          <button onClick={() => { clearError(); fetchEvents(); }}>Повторить</button>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="eventsPage">

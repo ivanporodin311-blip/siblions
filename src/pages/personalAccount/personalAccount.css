@@ -19,6 +19,95 @@
   line-height: 1.2;
 }
 
+/* Заголовок и кнопка в одной строке */
+.accountTitleSection {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+}
+
+.accountTitleSection .personalAccountTitle {
+  margin-bottom: 0;
+}
+
+/* Кнопка входа */
+.accountLoginBtn {
+  font-family: "Kontora", sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  color: #003466;
+  background: #ffffff;
+  border: 2px solid #003466;
+  border-radius: 8px;
+  padding: 12px 24px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.accountLoginBtn:hover {
+  background: #003466;
+  color: #ffffff;
+}
+
+.accountLoginBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Кнопка выхода */
+.accountLogoutBtn {
+  font-family: "Kontora", sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  color: #b71c1c;
+  background: #ffebee;
+  border: 1px solid #c62828;
+  border-radius: 8px;
+  padding: 12px 24px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.accountLogoutBtn:hover {
+  background: #b71c1c;
+  color: #fff;
+  border-color: #8b0000;
+}
+
+.accountLogoutBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Сообщение для гостя */
+.accountGuestMessage {
+  text-align: center;
+  padding: 60px 400px;
+  background: #f5f9ff;
+  border-radius: 25px;
+  margin-top: 20px;
+}
+
+.accountGuestMessage p {
+  font-family: "Kontora", sans-serif;
+  font-size: 18px;
+  color: #666;
+  margin: 0;
+}
+
+/* Ошибка авторизации */
+.authError {
+  margin-top: 20px;
+  padding: 15px;
+  background: #ffebee;
+  border: 1px solid #c62828;
+  border-radius: 8px;
+  color: #c62828;
+  font-family: "Kontora", sans-serif;
+  text-align: center;
+}
+
 /* Основное окно с информацией */
 .accountInfoContainer {
   width: 100%;
@@ -36,7 +125,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 40px;
+  margin-bottom: 10px;
   padding-bottom: 30px;
   border-bottom: 2px solid #f1f5f9;
 }
@@ -70,30 +159,47 @@
   text-align: right;
 }
 
-.accountSections {
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
-}
 
-.accountLogoutBtn {
+
+
+/* Email */
+.accountEmail {
   font-family: "Kontora", sans-serif;
-  font-weight: 500;
-  font-size: 16px;
-  color: #b71c1c;
-  background: #ffebee;
-  border: 1px solid #c62828;
-  border-radius: 8px;
-  padding: 10px 20px;
-  cursor: pointer;
-  width: fit-content;
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  font-weight: 400;
+  font-size: 18px;
+  color: #003466;
+  margin: 0;
+  padding: 10px 0;
 }
 
-.accountLogoutBtn:hover {
-  background: #b71c1c;
-  color: #fff;
-  border-color: #8b0000;
+/* Группа */
+.accountGroup {
+  font-family: "Kontora", sans-serif;
+  font-weight: 400;
+  font-size: 18px;
+  color: #003466;
+  margin: 0;
+  padding: 5px 0;
+}
+
+/* Курс */
+.accountCourse {
+  font-family: "Kontora", sans-serif;
+  font-weight: 400;
+  font-size: 18px;
+  color: #003466;
+  margin: 0;
+  padding: 5px 0;
+}
+
+/* Факультет */
+.accountFaculty {
+  font-family: "Kontora", sans-serif;
+  font-weight: 400;
+  font-size: 18px;
+  color: #003466;
+  margin: 0;
+  padding: 5px 0;
 }
 
 /* Кнопки действий (если понадобятся) */
@@ -141,7 +247,12 @@
 
   .personalAccountTitle {
     font-size: 40px;
-    margin-bottom: 30px;
+  }
+
+  .accountTitleSection {
+    flex-direction: column;
+    gap: 20px;
+    align-items: flex-start;
   }
 
   .accountInfoContainer {
@@ -171,8 +282,15 @@
     font-size: 24px;
   }
 
-  .sectionTitle {
-    font-size: 20px;
+  .accountDivider {
+    margin: 20px 0;
+  }
+
+  .accountEmail,
+  .accountGroup,
+  .accountCourse,
+  .accountFaculty {
+    font-size: 16px;
   }
 
   .accountActions {
@@ -201,5 +319,12 @@
 
   .accountInfoContainer {
     padding: 16px;
+  }
+
+  .accountEmail,
+  .accountGroup,
+  .accountCourse,
+  .accountFaculty {
+    font-size: 14px;
   }
 }

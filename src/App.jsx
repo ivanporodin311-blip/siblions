@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
+import { useAppStore } from "./store/useAppStore"; 
+
 import Header from "./components/header/header";
 import Footer from "./components/footer/footer";
 import EventsPage from "./pages/events/events";
@@ -12,29 +14,30 @@ import "./App.css";
 const PAGE_KEY = "appCurrentPage";
 const VALID_PAGES = ["events", "orders", "personalAccount", "statistics"];
 
-function AppLayout({ children, isUserLoggedIn, onAuthChange }) {
+// Компонент-заглушка для неавторизованных пользователей
+const GuestMessage = () => (
+  <div className="accountGuestMessage">
+    <p>Пожалуйста, авторизуйтесь для доступа к личному кабинету.</p>
+  </div>
+);
+
+function AppLayout({ children, isUserLoggedIn, requiresAuth }) {
   const navigate = useNavigate();
   const location = useLocation();
   const isNavigating = useRef(false);
   
   const getPageFromPath = (pathname) => {
-    const page = pathname.slice(1);
+    const page = pathname.replace(/^\/siblions\//, '').split('/')[0];
     return VALID_PAGES.includes(page) ? page : null;
   };
 
   const [currentPage, setCurrentPageState] = useState(() => {
     const urlPage = getPageFromPath(location.pathname);
-    if (urlPage) {
-      return urlPage;
-    }
+    if (urlPage) return urlPage;
     const saved = localStorage.getItem(PAGE_KEY);
-    if (saved && VALID_PAGES.includes(saved)) {
-      return saved;
-    }
-    return "events";
+    return (saved && VALID_PAGES.includes(saved)) ? saved : "events";
   });
 
-  // Синхронизация URL с состоянием
   useEffect(() => {
     const pageFromUrl = getPageFromPath(location.pathname);
     
@@ -44,9 +47,7 @@ function AppLayout({ children, isUserLoggedIn, onAuthChange }) {
     } else if (!pageFromUrl && currentPage && !location.pathname.includes("/events/")) {
       isNavigating.current = true;
       navigate(`/${currentPage}`, { replace: true });
-      setTimeout(() => {
-        isNavigating.current = false;
-      }, 100);
+      setTimeout(() => { isNavigating.current = false; }, 100);
     }
   }, [location.pathname, currentPage, navigate]);
 
@@ -56,9 +57,7 @@ function AppLayout({ children, isUserLoggedIn, onAuthChange }) {
       setCurrentPageState(newPage);
       localStorage.setItem(PAGE_KEY, newPage);
       navigate(`/${newPage}`);
-      setTimeout(() => {
-        isNavigating.current = false;
-      }, 100);
+      setTimeout(() => { isNavigating.current = false; }, 100);
     }
   }, [currentPage, navigate]);
 
@@ -70,7 +69,8 @@ function AppLayout({ children, isUserLoggedIn, onAuthChange }) {
         isUserLoggedIn={isUserLoggedIn}
       />
       <main className="app__content">
-        {children}
+        {/* ПРОВЕРКА: Если страница требует авторизации, а юзер не вошел — показываем текст */}
+        {requiresAuth && !isUserLoggedIn ? <GuestMessage /> : children}
       </main>
       <Footer onPageChange={setCurrentPage} />
     </div>
@@ -78,22 +78,28 @@ function AppLayout({ children, isUserLoggedIn, onAuthChange }) {
 }
 
 function App() {
-  const [isUserLoggedIn, setIsUserLoggedIn] = useState(() => {
-    return localStorage.getItem("userData") !== null;
-  });
+  const { authSlice, authSliceMethods } = useAppStore();
 
   useEffect(() => {
-    const handleStorageChange = () => {
-      setIsUserLoggedIn(localStorage.getItem("userData") !== null);
+    const initAuth = async () => {
+      const savedCode = sessionStorage.getItem('temp_oauth_code');
+      const savedState = sessionStorage.getItem('temp_oauth_state');
+      
+      if (savedCode) {
+        const query = `?code=${savedCode}&state=${savedState}`;
+        try {
+          await authSliceMethods.checkAuthentication(query);
+        } finally {
+          sessionStorage.removeItem('temp_oauth_code');
+          sessionStorage.removeItem('temp_oauth_state');
+        }
+        return; 
+      }
+      await authSliceMethods.checkAuthentication();
     };
     
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-
-  const handleAuthChange = useCallback((isLoggedIn) => {
-    setIsUserLoggedIn(isLoggedIn);
-  }, []);
+    initAuth();
+  }, [authSliceMethods]);
 
   return (
     <BrowserRouter basename="/siblions">
@@ -101,34 +107,28 @@ function App() {
         <Route 
           path="/events/:eventId" 
           element={
-            <AppLayout 
-              isUserLoggedIn={isUserLoggedIn}
-              onAuthChange={handleAuthChange}
-            >
+            <AppLayout isUserLoggedIn={authSlice.isAuthenticated} requiresAuth={false}>
               <EventDetailsPage />
             </AppLayout>
           } 
         />
         
         <Route path="/" element={<Navigate to="/events" replace />} />
+        
         <Route 
           path="/events" 
           element={
-            <AppLayout 
-              isUserLoggedIn={isUserLoggedIn}
-              onAuthChange={handleAuthChange}
-            >
+            <AppLayout isUserLoggedIn={authSlice.isAuthenticated} requiresAuth={true}>
               <EventsPage />
             </AppLayout>
           } 
         />
+        
+        {/* Защищенные маршруты: добавили requiresAuth={true} */}
         <Route 
           path="/orders" 
           element={
-            <AppLayout 
-              isUserLoggedIn={isUserLoggedIn}
-              onAuthChange={handleAuthChange}
-            >
+            <AppLayout isUserLoggedIn={authSlice.isAuthenticated} requiresAuth={true}>
               <OrdersPage />
             </AppLayout>
           } 
@@ -136,25 +136,20 @@ function App() {
         <Route 
           path="/personalAccount" 
           element={
-            <AppLayout 
-              isUserLoggedIn={isUserLoggedIn}
-              onAuthChange={handleAuthChange}
-            >
-              <PersonalAccountPage onAuthChange={handleAuthChange} />
+            <AppLayout isUserLoggedIn={authSlice.isAuthenticated} requiresAuth={false}>
+              <PersonalAccountPage />
             </AppLayout>
           } 
         />
         <Route 
           path="/statistics" 
           element={
-            <AppLayout 
-              isUserLoggedIn={isUserLoggedIn}
-              onAuthChange={handleAuthChange}
-            >
+            <AppLayout isUserLoggedIn={authSlice.isAuthenticated} requiresAuth={true}>
               <StatisticsPage />
             </AppLayout>
           } 
         />
+        
         <Route path="*" element={<Navigate to="/events" replace />} />
       </Routes>
     </BrowserRouter>
