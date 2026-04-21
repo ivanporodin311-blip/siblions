@@ -17,7 +17,7 @@ const VALID_PAGES = ["events", "orders", "personalAccount", "statistics"];
 // Компонент-заглушка для неавторизованных пользователей
 const GuestMessage = () => (
   <div className="accountGuestMessage">
-    <p>Пожалуйста, авторизуйтесь для доступа к личному кабинету.</p>
+    <p>Пожалуйста, авторизуйтесь для доступа к контенту.</p>
   </div>
 );
 

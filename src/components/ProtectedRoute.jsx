@@ -17,7 +17,7 @@ const ProtectedRoute = ({ children }) => {
   if (!isAuthenticated) {
     return (
       <div className="accountGuestMessage">
-        <p>Пожалуйста, авторизуйтесь для доступа к личному кабинету.</p>
+        <p>Пожалуйста, авторизуйтесь для доступа к контенту.</p>
       </div>
     );
   }

@@ -43,14 +43,12 @@
   border-color: #003465;
 }
 
-
-
 /* Секция заголовка */
 .eventCard__header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 20px;
+  width: 100%;
 }
 
 .eventCard__titleSection {
@@ -58,7 +56,8 @@
   align-items: center;
   gap: 12px;
   flex: 1;
-  min-width: 0; /* Важно для обрезания */
+  min-width: 0;
+  margin-right: 20px;
 }
 
 .eventCard__title {
@@ -69,8 +68,6 @@
   margin: 0;
   line-height: 1.2;
   transition: color 0.8s ease;
-  
-  /* Ограничение длины текста */
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
@@ -106,6 +103,7 @@
   object-fit: contain;
 }
 
+/* Правая часть - прижимаем к правому краю */
 .eventCard__headerInfo {
   display: flex;
   align-items: center;
@@ -113,6 +111,7 @@
   flex-shrink: 0;
 }
 
+/* Контейнер для места, даты и времени - теперь flex с переносом */
 .eventCard__locationDate {
   font-family: "Kontora", sans-serif;
   font-weight: 400;
@@ -120,28 +119,35 @@
   color: #003466;
   line-height: 1.4;
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 5px;
+  align-items: baseline;
   justify-content: flex-end;
-  white-space: nowrap;
+  gap: 8px;
+  flex-wrap: wrap; /* Разрешаем перенос на новую строку */
+  text-align: right;
 }
 
 .eventCard__location {
   color: #003466;
   transition: color 0.8s ease;
-  max-width: 300px;
+  max-width: 280px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.eventCard__date,
+.eventCard__date {
+  color: #003466;
+  transition: color 0.8s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .eventCard__time {
   color: #003466;
   transition: color 0.8s ease;
   white-space: nowrap;
   flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
 }
 
 .eventCard__separator {
@@ -151,27 +157,22 @@
   flex-shrink: 0;
 }
 
-/* Адаптивность для планшетов */
-@media (max-width: 1300px) {
-  .eventCard {
-    padding: 30px 20px;
-  }
-
+/* Адаптивность */
+@media (max-width: 1200px) {
   .eventCard__title {
     font-size: 32px;
-    max-height: 76px;
   }
-
+  
   .eventCard__locationDate {
     font-size: 26px;
   }
   
   .eventCard__location {
-    max-width: 250px;
+    max-width: 220px;
   }
 }
 
-@media (max-width: 992px) {
+@media (max-width: 1000px) {
   .eventCard__header {
     flex-direction: column;
     align-items: flex-start;
@@ -180,6 +181,7 @@
   
   .eventCard__titleSection {
     width: 100%;
+    margin-right: 0;
   }
   
   .eventCard__headerInfo {
@@ -189,11 +191,11 @@
   
   .eventCard__locationDate {
     justify-content: flex-start;
-    flex-wrap: wrap;
+    text-align: left;
   }
   
   .eventCard__location {
-    max-width: 400px;
+    max-width: 100%;
   }
 }
 
@@ -204,7 +206,6 @@
 
   .eventCard__title {
     font-size: 28px;
-    max-height: 68px;
   }
 
   .eventCard__locationDate {
@@ -212,11 +213,9 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 5px;
-    white-space: normal;
   }
-
+  
   .eventCard__location {
-    max-width: 100%;
     white-space: normal;
     word-break: break-word;
   }
@@ -233,18 +232,9 @@
 
   .eventCard__title {
     font-size: 24px;
-    max-height: 58px;
   }
 
   .eventCard__locationDate {
     font-size: 18px;
   }
-}
-
-/* Для длинных слов */
-.eventCard__title,
-.eventCard__location {
-  word-break: break-word;
-  overflow-wrap: break-word;
-  hyphens: auto;
 }

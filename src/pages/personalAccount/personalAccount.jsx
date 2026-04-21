@@ -75,7 +75,7 @@ const PersonalAccountPage = () => {
           </button>
         </div>
         <div className="accountGuestMessage">
-          <p>Пожалуйста, авторизуйтесь для доступа к личному кабинету.</p>
+          <p>Пожалуйста, авторизуйтесь для доступа к контенту.</p>
         </div>
         {authSlice.error && (
           <div className="authError">
