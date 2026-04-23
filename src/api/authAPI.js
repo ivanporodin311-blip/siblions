@@ -36,7 +36,7 @@ export const fetchAuth = async (oauthData) => {
 
     const data = await response.json();
     console.log('✅ Данные пользователя получены');
-    
+
     // Если бэкенд возвращает refresh_token в теле ответа
     if (data.refresh_token) {
       document.cookie = `refresh_token=${data.refresh_token}; path=/; max-age=2592000`;
@@ -50,12 +50,13 @@ export const fetchAuth = async (oauthData) => {
 };
 
 /**
- * Обновление сессии (Refresh)
+ * Обновление сессии и получение данных пользователя (Refresh + Me)
+ * Возвращает данные пользователя если сессия валидна
  */
 export const fetchAuthRefresh = async () => {
   const config = getApiConfig();
   const url = `${config.baseURL}${import.meta.env.VITE_REF_POST_RELOGIN}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'POST',
@@ -64,10 +65,17 @@ export const fetchAuthRefresh = async () => {
     });
 
     console.log('📥 refresh статус:', response.status);
-    return response.ok;
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json();
+    console.log('✅ Сессия обновлена, данные пользователя получены');
+    return data;
   } catch (error) {
     console.error('❌ [fetchAuthRefresh] Ошибка рефреша:', error);
-    return false;
+    return null;
   }
 };
 
@@ -77,7 +85,7 @@ export const fetchAuthRefresh = async () => {
 export const logout = async () => {
   const config = getApiConfig();
   const url = `${config.baseURL}${import.meta.env.VITE_REF_POST_LOGOUT}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'POST',
