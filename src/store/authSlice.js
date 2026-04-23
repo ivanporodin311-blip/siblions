@@ -1,5 +1,5 @@
 import CryptoJS from 'crypto-js';
-import { fetchAuth, fetchAuthRefresh, getMeAuth, logout } from '../api/authAPI.js';
+import { fetchAuth, fetchAuthRefresh, logout } from '../api/authAPI.js';
 import { oauthCodeHandler } from '../Services/authHandler.js';
 
 export const useAuthSlice = (set, get) => ({
@@ -10,37 +10,42 @@ export const useAuthSlice = (set, get) => ({
     isLoading: false,
     error: null,
   },
-  authSliceMethods: {
 
+  authSliceMethods: {
+    /**
+     * Проверка авторизации при загрузке приложения
+     * Работает без /me: проверяет OAuth callback → localStorage → refresh
+     */
     checkAuthentication: async (query = '') => {
       const { isAuthenticated } = get().authSlice;
-      const { handleAuthError, tryMeAuth, refreshLogin, tryOAuth } = get().authSliceMethods;
+      const { handleAuthError, refreshLogin, tryOAuth, checkLocalStorage } = get().authSliceMethods;
       
+      // Если уже авторизован в стейте — выходим
       if (isAuthenticated) return true;
 
       try {
-        // 1. Приоритет: Обработка кода OAuth из URL
+        // 1. Приоритет: Обработка кода OAuth из URL (первый вход)
         if (query && query.includes('code=')) {
           const oauthStatus = await tryOAuth(query);
           if (oauthStatus) {
-            await tryMeAuth();
-            // Чистим URL от мусора после успешного входа
-           // window.location.href = window.location.origin + window.location.pathname;
-           window.history.replaceState({}, document.title, window.location.pathname);
+            // Чистим URL после успешного входа
+            window.history.replaceState({}, document.title, window.location.pathname);
             return true;
           }
         }
 
-        // 2. Проверка живой сессии (по кукам через /me)
-        const isMe = await tryMeAuth();
-        if (isMe) return true;
+        // 2. Проверка localStorage (Zustand persist + authService)
+        const isLocal = await checkLocalStorage();
+        if (isLocal) return true;
 
-        // 3. Попытка рефреша сессии
+        // 3. Попытка рефреша сессии через куки
         const isRefreshed = await refreshLogin();
         if (isRefreshed) {
-          return await tryMeAuth();
+          // Если рефреш успешен, пробуем ещё раз проверить localStorage
+          return await checkLocalStorage();
         }
 
+        // Если ничего не сработало — пользователь не авторизован
         return false;
       } catch (error) {
         handleAuthError(error);
@@ -48,6 +53,26 @@ export const useAuthSlice = (set, get) => ({
       }
     },
 
+    /**
+     * Проверка данных в localStorage (fallback при перезагрузке)
+     */
+    checkLocalStorage: async () => {
+      const { setAuthenticated, getUserData } = get().authSliceMethods;
+      
+      // Проверяем, есть ли пользователь в authService (localStorage)
+      const authService = await import("../Services/authHandler.js").then(m => m.default);
+      const localUser = authService.getUser();
+      
+      if (localUser && authService.isAuthenticated()) {
+        await setAuthenticated(localUser);
+        return true;
+      }
+      return false;
+    },
+
+    /**
+     * Обновление сессии через refresh-эндпоинт
+     */
     refreshLogin: async () => {
       const { startAuthLoading, endAuthLoading } = get().authSliceMethods;
       startAuthLoading();
@@ -55,32 +80,19 @@ export const useAuthSlice = (set, get) => ({
         const success = await fetchAuthRefresh();
         return success;
       } catch (error) {
+        console.warn('⚠️ Refresh failed:', error);
         return false;
       } finally {
         endAuthLoading();
       }
     },
 
-    tryMeAuth: async () => {
-      const { startAuthLoading, endAuthLoading, setAuthenticated } = get().authSliceMethods;
-      startAuthLoading();
-      try {
-        const userData = await getMeAuth();
-        if (!userData || typeof userData !== 'object') return false;
-        
-        await setAuthenticated(userData);
-        return true;
-      } catch (error) {
-        return false;
-      } finally {
-        endAuthLoading();
-      }
-    },
-
+    /**
+     * Обработка OAuth callback (code + state)
+     */
     tryOAuth: async (query) => {
       const { endAuthLoading, handleAuthError, startAuthLoading, fetchAndSetAuth } = get().authSliceMethods;
       
-      // Вызываем хендлер, который забирает code из URL и verifier из хранилища
       const authPayload = oauthCodeHandler(query);
       
       if (!authPayload) {
@@ -90,7 +102,6 @@ export const useAuthSlice = (set, get) => ({
 
       startAuthLoading();
       try {
-        // Прокидываем payload в fetchAndSetAuth
         await fetchAndSetAuth(authPayload);
         localStorage.setItem('auth', 'true');
         return true;
@@ -102,9 +113,13 @@ export const useAuthSlice = (set, get) => ({
       }
     },
 
+    /**
+     * Установка авторизованного состояния + шифрование пользователя
+     */
     setAuthenticated: async (userData) => {
       const { notifyAuthState } = get().authSliceMethods;
       const encryptedUser = _encryptData(userData);
+      
       set((state) => ({
         authSlice: {
           ...state.authSlice,
@@ -117,15 +132,25 @@ export const useAuthSlice = (set, get) => ({
       notifyAuthState();
     },
 
+    /**
+     * Вызов API логина и сохранение данных
+     */
     fetchAndSetAuth: async (authPayload) => {
       const { setAuthenticated } = get().authSliceMethods;
-      // Отправляем данные в API (там уже настроен маппинг на codeVerifier)
+      
       const authData = await fetchAuth(authPayload);
       
-      if (!authData) throw new Error("Сервер не вернул данные пользователя");
-      await setAuthenticated(authData);
+      if (!authData) {
+        throw new Error("Сервер не вернул данные пользователя");
+      }
+      
+      // Бэкенд может вернуть { user: {...} } или плоский объект
+      const userData = authData.user || authData;
+      await setAuthenticated(userData);
     },
 
+    // === Утилиты состояния ===
+    
     startAuthLoading: () => {
       set(state => ({ 
         authSlice: { ...state.authSlice, isLoading: true, error: null } 
@@ -142,7 +167,11 @@ export const useAuthSlice = (set, get) => ({
 
     handleAuthError: (error) => {
       set(state => ({ 
-        authSlice: { ...state.authSlice, error: error.message || 'Ошибка аутентификации' } 
+        authSlice: { 
+          ...state.authSlice, 
+          error: error.message || 'Ошибка аутентификации',
+          isLoading: false 
+        } 
       }));
     },
 
@@ -150,31 +179,38 @@ export const useAuthSlice = (set, get) => ({
       get().notify(get().authSlice.type);
     },
 
+    /**
+     * Получение расшифрованных данных пользователя
+     */
     getUserData: () => {
       const encryptedUser = get().authSlice.user;
       if (!encryptedUser) return null;
       try {
-        const bytes = CryptoJS.AES.decrypt(encryptedUser, import.meta.env.VITE_SECRET_KEY);
+        const bytes = CryptoJS.AES.decrypt(encryptedUser, import.meta.env.VITE_SECRET_KEY); 
         const decryptedString = bytes.toString(CryptoJS.enc.Utf8);
         return JSON.parse(decryptedString);
       } catch (error) {
+        console.error('❌ Ошибка расшифровки пользователя:', error);
         return null;
       }
     },
 
+    /**
+     * Выход из системы
+     */
     logout: async () => {
       console.log('🔐 [authSlice] logout инициирован');
       
       try { 
-        const result = await logout();
-        console.log('✅ [authSlice] API logout успех:', result);
+        await logout(); // Вызов API выхода
       } catch (e) {
         console.error('❌ [authSlice] API logout провалился, но чистим стейт:', e);
       }
       
       // Полная зачистка всех следов
       localStorage.removeItem('auth');
-      sessionStorage.removeItem('code_verifier'); // На всякий случай оба варианта
+      localStorage.removeItem('auth-storage'); // Zustand persist key
+      sessionStorage.removeItem('code_verifier');
       sessionStorage.removeItem('codeVerifier');
       sessionStorage.removeItem('oauth_state');
       
@@ -188,9 +224,12 @@ export const useAuthSlice = (set, get) => ({
         }
       });
       
-      console.log('🔓 [authSlice] Состояние сброшено. Редирект должен сделать компонент.');
+      console.log('🔓 [authSlice] Состояние сброшено');
     },
 
+    /**
+     * Проверка текущего статуса (для селекторов)
+     */
     checkAuthStatus: function () {
       const state = get();
       return {
@@ -200,6 +239,8 @@ export const useAuthSlice = (set, get) => ({
     },
   }
 });
+
+// === Внутренние функции ===
 
 function _encryptData(data) {
   return CryptoJS.AES.encrypt(
