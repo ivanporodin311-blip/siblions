@@ -1,6 +1,7 @@
 import CryptoJS from 'crypto-js';
 import { fetchAuth, fetchAuthRefresh, logout } from '../api/authAPI.js';
 import { oauthCodeHandler } from '../Services/authHandler.js';
+import { useAppStore } from './useAppStore.js';
 
 export const useAuthSlice = (set, get) => ({
   authSlice: {
@@ -14,11 +15,11 @@ export const useAuthSlice = (set, get) => ({
   authSliceMethods: {
     /**
      * Проверка авторизации при загрузке приложения
-     * Работает без /me: проверяет OAuth callback → localStorage → refresh
+     * Работает без /me: проверяет OAuth callback → Zustand persist (localStorage) → refresh
      */
     checkAuthentication: async (query = '') => {
       const { isAuthenticated } = get().authSlice;
-      const { handleAuthError, refreshLogin, tryOAuth, checkLocalStorage } = get().authSliceMethods;
+      const { handleAuthError, refreshLogin, tryOAuth, checkPersistedState } = get().authSliceMethods;
 
       // Если уже авторизован в стейте — выходим
       if (isAuthenticated) return true;
@@ -34,15 +35,15 @@ export const useAuthSlice = (set, get) => ({
           }
         }
 
-        // 2. Проверка localStorage (Zustand persist + authService)
-        const isLocal = await checkLocalStorage();
-        if (isLocal) return true;
+        // 2. Проверка Zustand persist (localStorage) - основной источник истины
+        const isPersisted = await checkPersistedState();
+        if (isPersisted) return true;
 
-        // 3. Попытка рефреша сессии через куки
+        // 3. Попытка рефреша сессии через куки (только если нет данных в localStorage)
         const isRefreshed = await refreshLogin();
         if (isRefreshed) {
           // Если рефреш успешен, пробуем ещё раз проверить localStorage
-          return await checkLocalStorage();
+          return await checkPersistedState();
         }
 
         // Если ничего не сработало — пользователь не авторизован
@@ -54,19 +55,22 @@ export const useAuthSlice = (set, get) => ({
     },
 
     /**
-     * Проверка данных в localStorage (fallback при перезагрузке)
+     * Проверка данных в Zustand persist (localStorage)
+     * Это основной способ восстановления состояния после перезагрузки
      */
-    checkLocalStorage: async () => {
-      const { setAuthenticated, getUserData } = get().authSliceMethods;
+    checkPersistedState: async () => {
+      const { setAuthenticated } = get().authSliceMethods;
 
-      // Проверяем, есть ли пользователь в authService (localStorage)
-      const authService = await import("../Services/authHandler.js").then(m => m.default);
-      const localUser = authService.getUser();
+      // Zustand persist автоматически восстанавливает состояние при инициализации store
+      // Проверяем, есть ли пользователь в стейте
+      const { authSlice } = get();
 
-      if (localUser && authService.isAuthenticated()) {
-        await setAuthenticated(localUser);
+      if (authSlice.isAuthenticated && authSlice.user) {
+        // Состояние уже восстановлено из persist - просто подтверждаем
+        console.log('✅ Авторизация восстановлена из Zustand persist');
         return true;
       }
+
       return false;
     },
 
@@ -103,7 +107,7 @@ export const useAuthSlice = (set, get) => ({
       startAuthLoading();
       try {
         await fetchAndSetAuth(authPayload);
-        localStorage.setItem('auth', 'true');
+        // Не нужно устанавливать localStorage.setItem('auth', 'true') - zustand persist делает это автоматически
         return true;
       } catch (error) {
         handleAuthError(error);
@@ -147,10 +151,6 @@ export const useAuthSlice = (set, get) => ({
       // Бэкенд может вернуть { user: {...} } или плоский объект
       const userData = authData.user || authData;
       await setAuthenticated(userData);
-
-      // Сохраняем данные в localStorage для восстановления после перезагрузки
-      const authService = await import("../Services/authHandler.js").then(m => m.default);
-      authService.setUser(userData);
     },
 
     // === Утилиты состояния ===
@@ -212,12 +212,12 @@ export const useAuthSlice = (set, get) => ({
       }
 
       // Полная зачистка всех следов
-      localStorage.removeItem('auth');
-      localStorage.removeItem('auth_user');
-      localStorage.removeItem('auth-storage'); // Zustand persist key
       sessionStorage.removeItem('code_verifier');
       sessionStorage.removeItem('codeVerifier');
       sessionStorage.removeItem('oauth_state');
+
+      // Используем Zustand persist API для очистки
+      useAppStore.persist.clearStorage();
 
       set({
         authSlice: {
