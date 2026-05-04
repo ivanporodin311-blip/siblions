@@ -40,7 +40,16 @@ const EventCard = ({ event, onEdit }) => {
   };
 
   const handleCardClick = () => {
-    navigate(`/events/${event.id}`);
+    // ✅ Используем uuid или id (UUID предпочтительнее)
+    const eventId = event.uuid || event.id;
+    
+    if (!eventId) {
+      console.error("❌ У события нет идентификатора:", event);
+      return;
+    }
+    
+    console.log("🔍 Переход на детальную страницу с ID:", eventId);
+    navigate(`/events/${eventId}`);
   };
 
   const handleEditClick = (e) => {
@@ -88,7 +97,7 @@ const EventCard = ({ event, onEdit }) => {
               className="eventCard__location" 
               title={locationTooltip}
             >
-              {event.location}
+              {event.location || "Место не указано"}
             </span>
             <span className="eventCard__separator"> | </span>
             <span 

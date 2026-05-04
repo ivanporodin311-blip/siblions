@@ -1,27 +1,26 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom"; // ✅ Добавьте для навигации
 import "./events.css";
 import TitleWithAddButton from "./title/titleWithAddButton/titleWithAddButton";
 import FutureEventsButton from "./title/futureEventsButton/futureEventsButton";
 import PastEventsButton from "./title/pastEventsButton/pastEventsButton";
 import ModalAddWindow from "./modalAddWindow/modalAddWindow";
 import EventCard from "./EventCard/EventCard";
-import useEventStore from "../../stores/eventStore"; // Импорт store
+import useEventStore from "../../stores/eventStore";
 
 function EventsPage() {
+  const navigate = useNavigate(); // ✅ Добавлено для перехода на детальную страницу
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("create");
   const [editingEvent, setEditingEvent] = useState(null);
   const [activeTab, setActiveTab] = useState("future");
   
-  // Используем store вместо localStorage
   const { events, loading, error, fetchEvents, createEvent, updateEvent, deleteEvent, clearError } = useEventStore();
 
-  // Загрузка событий при монтировании
   useEffect(() => {
     fetchEvents();
   }, []);
 
-  // Восстановление скролла
   useEffect(() => {
     const savedScroll = sessionStorage.getItem("eventsScrollPosition");
     if (savedScroll !== null) {
@@ -45,15 +44,33 @@ function EventsPage() {
     setIsModalOpen(true);
   };
 
+  // ✅ Добавлен обработчик клика по карточке для перехода на детальную страницу
+  const handleEventClick = (event) => {
+    const eventId = event.uuid || event.id;
+    if (eventId) {
+      console.log('🔍 Переход на детальную страницу с ID:', eventId);
+      navigate(`/events/${eventId}`);
+    } else {
+      console.error('❌ У события нет ID:', event);
+    }
+  };
+
   const handleCreateEvent = async (newEventData) => {
     const result = await createEvent(newEventData);
     if (result) {
       setIsModalOpen(false);
+      await fetchEvents();
     }
   };
 
   const handleUpdateEvent = async (updatedEventData) => {
-    const result = await updateEvent(editingEvent.id, updatedEventData);
+    // ✅ Используем uuid или id
+    const eventId = editingEvent?.uuid || editingEvent?.id;
+    if (!eventId) {
+      console.error('❌ Нет ID события для обновления');
+      return;
+    }
+    const result = await updateEvent(eventId, updatedEventData);
     if (result) {
       setIsModalOpen(false);
       setEditingEvent(null);
@@ -68,7 +85,8 @@ function EventsPage() {
 
   const handleDeleteEventFromModal = () => {
     if (editingEvent) {
-      handleDeleteEvent(editingEvent.id);
+      const eventId = editingEvent.uuid || editingEvent.id;
+      handleDeleteEvent(eventId);
     }
   };
 
@@ -92,7 +110,6 @@ function EventsPage() {
 
   const displayedEvents = filterEvents(activeTab);
 
-  // Показ загрузки
   if (loading && events.length === 0) {
     return (
       <section className="eventsPage">
@@ -104,7 +121,6 @@ function EventsPage() {
     );
   }
 
-  // Показ ошибки
   if (error) {
     return (
       <section className="eventsPage">
@@ -139,9 +155,10 @@ function EventsPage() {
         {displayedEvents.length > 0 ? (
           displayedEvents.map((event) => (
             <EventCard
-              key={event.id}
+              key={event.uuid || event.id}  // ✅ Используем uuid или id
               event={event}
               onEdit={handleEditEvent}
+              onClick={() => handleEventClick(event)}  // ✅ Добавлен переход по клику
             />
           ))
         ) : (

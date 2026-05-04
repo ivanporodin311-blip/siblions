@@ -24,22 +24,20 @@ export const useAuthSlice = (set, get) => ({
           const oauthStatus = await tryOAuth(query);
           if (oauthStatus) {
             await tryMeAuth();
-            // Чистим URL от мусора после успешного входа
-           // window.location.href = window.location.origin + window.location.pathname;
-           window.history.replaceState({}, document.title, window.location.pathname);
+            window.history.replaceState({}, document.title, window.location.pathname);
             return true;
           }
         }
 
         // 2. Проверка живой сессии (по кукам через /me)
-        const isMe = await tryMeAuth();
-        if (isMe) return true;
+        // const isMe = await tryMeAuth();
+        // if (isMe) return true;
 
         // 3. Попытка рефреша сессии
-        const isRefreshed = await refreshLogin();
-        if (isRefreshed) {
-          return await tryMeAuth();
-        }
+        // const isRefreshed = await refreshLogin();
+        // if (isRefreshed) {
+        //   return await tryMeAuth();
+        // }
 
         return false;
       } catch (error) {
@@ -91,7 +89,17 @@ export const useAuthSlice = (set, get) => ({
       startAuthLoading();
       try {
         // Прокидываем payload в fetchAndSetAuth
-        await fetchAndSetAuth(authPayload);
+        const authResult = await fetchAndSetAuth(authPayload);
+        
+        // ✅ СОХРАНЯЕМ ТОКЕН ПОСЛЕ УСПЕШНОЙ АВТОРИЗАЦИИ
+        if (authResult && authResult.token) {
+          localStorage.setItem('auth_token', authResult.token);
+          console.log('✅ Токен сохранён в localStorage');
+        } else if (authResult && authResult.user && authResult.user.token) {
+          localStorage.setItem('auth_token', authResult.user.token);
+          console.log('✅ Токен сохранён из user объекта');
+        }
+        
         localStorage.setItem('auth', 'true');
         return true;
       } catch (error) {
@@ -104,6 +112,16 @@ export const useAuthSlice = (set, get) => ({
 
     setAuthenticated: async (userData) => {
       const { notifyAuthState } = get().authSliceMethods;
+      
+      // ✅ СОХРАНЯЕМ ТОКЕН ЕСЛИ ОН ЕСТЬ В userData
+      if (userData && userData.token) {
+        localStorage.setItem('auth_token', userData.token);
+        console.log('✅ Токен сохранён в setAuthenticated');
+      } else if (userData && userData.user && userData.user.token) {
+        localStorage.setItem('auth_token', userData.user.token);
+        console.log('✅ Токен сохранён из user объекта в setAuthenticated');
+      }
+      
       const encryptedUser = _encryptData(userData);
       set((state) => ({
         authSlice: {
@@ -123,7 +141,10 @@ export const useAuthSlice = (set, get) => ({
       const authData = await fetchAuth(authPayload);
       
       if (!authData) throw new Error("Сервер не вернул данные пользователя");
+      
+      // ✅ Возвращаем authData для дальнейшей обработки токена
       await setAuthenticated(authData);
+      return authData; // Возвращаем данные для tryOAuth
     },
 
     startAuthLoading: () => {
@@ -174,7 +195,8 @@ export const useAuthSlice = (set, get) => ({
       
       // Полная зачистка всех следов
       localStorage.removeItem('auth');
-      sessionStorage.removeItem('code_verifier'); // На всякий случай оба варианта
+      localStorage.removeItem('auth_token'); // ✅ Удаляем токен
+      sessionStorage.removeItem('code_verifier');
       sessionStorage.removeItem('codeVerifier');
       sessionStorage.removeItem('oauth_state');
       

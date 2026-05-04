@@ -55,6 +55,10 @@ const ModalAddWindow = ({
     location: "",
     date: "",
     time: "",
+    endDate: "",
+    endTime: "",
+    registrationDeadline: "",
+    registrationDeadlineTime: "",
     sportType: "",
     eventLevel: "",
     description: "",
@@ -70,14 +74,18 @@ const ModalAddWindow = ({
       setFormData({
         title: eventToEdit.title || "",
         location: eventToEdit.location || "",
-        date: eventToEdit.date || "",
-        time: eventToEdit.time || "",
-        sportType: eventToEdit.sportType || "",
+        date: eventToEdit.startDate ? eventToEdit.startDate.slice(0, 10) : "",
+        time: eventToEdit.startDate ? eventToEdit.startDate.slice(11, 16) : "",
+        endDate: eventToEdit.endDate ? eventToEdit.endDate.slice(0, 10) : "",
+        endTime: eventToEdit.endDate ? eventToEdit.endDate.slice(11, 16) : "23:59",
+        registrationDeadline: eventToEdit.registrationDeadline ? eventToEdit.registrationDeadline.slice(0, 10) : "",
+        registrationDeadlineTime: eventToEdit.registrationDeadline ? eventToEdit.registrationDeadline.slice(11, 16) : "23:59",
+        sportType: eventToEdit.eventType || "",
         eventLevel: eventToEdit.eventLevel || "",
         description: eventToEdit.description || "",
         tasks: eventToEdit.tasks || "",
         organizers: eventToEdit.organizers || "",
-        points: eventToEdit.points || "",
+        points: eventToEdit.participantPoints || "",
         attachedFileName: eventToEdit.attachedFileName || "",
         attachedFileData: eventToEdit.attachedFileData || "",
       });
@@ -94,7 +102,6 @@ const ModalAddWindow = ({
   }, [formData.description, formData.tasks, formData.organizers]);
 
   const fileDialogOpenRef = useRef(false);
-
   const scrollPosRef = useRef(0);
 
   useEffect(() => {
@@ -129,6 +136,7 @@ const ModalAddWindow = ({
     document.addEventListener("keydown", onEsc);
     return () => document.removeEventListener("keydown", onEsc);
   }, [onClose]);
+  
   const handleOverlayClick = (e) => {
     if (fileDialogOpenRef.current) return;
     if (e.target === e.currentTarget) {
@@ -162,11 +170,9 @@ const ModalAddWindow = ({
       return;
     }
 
-    // Проверка размера
     if (file.size > MAX_FILE_SIZE) {
       setFileError("Файл слишком большой. Максимум 2 МБ.");
       if (fileInputRef.current) fileInputRef.current.value = "";
-      // Сбрасываем имя файла в стейте, чтобы не висело старое
       setFormData(p => ({ ...p, attachedFileName: "", attachedFileData: "" }));
       return;
     }
@@ -184,15 +190,67 @@ const ModalAddWindow = ({
   };
 
   const handleRemoveFile = (e) => {
-    e.stopPropagation(); // Важно: чтобы клик по "Удалить" не триггернул открытие файла
+    e.stopPropagation();
     setFormData((p) => ({ ...p, attachedFileName: "", attachedFileData: "" }));
     setFileError("");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  // ✅ ИСПРАВЛЕННАЯ handleSubmit - можно указывать все даты
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
+    
+    // Создаем ISO дату начала
+    let startDate = null;
+    if (formData.date) {
+      const startTime = formData.time || "00:00";
+      startDate = new Date(`${formData.date}T${startTime}:00`).toISOString();
+    }
+    
+    // Создаем ISO дату окончания
+    let endDate = null;
+    if (formData.endDate) {
+      const endTime = formData.endTime || "23:59";
+      endDate = new Date(`${formData.endDate}T${endTime}:59`).toISOString();
+    } else if (formData.date) {
+      // Если endDate не указан, используем дату начала
+      const endTime = formData.endTime || "23:59";
+      endDate = new Date(`${formData.date}T${endTime}:59`).toISOString();
+    }
+    
+    // Создаем ISO дату дедлайна регистрации
+    let registrationDeadline = null;
+    if (formData.registrationDeadline) {
+      const deadlineTime = formData.registrationDeadlineTime || "23:59";
+      registrationDeadline = new Date(`${formData.registrationDeadline}T${deadlineTime}:59`).toISOString();
+    }
+    
+    // Формируем данные для сервера (только с валидными значениями)
+    const submitData = {
+      title: formData.title,
+      description: formData.description || "",
+      eventType: formData.sportType || "sport",
+      startDate: startDate,
+      endDate: endDate,
+      participantPoints: parseInt(formData.points) || 0,
+      fanPoints: 0,
+      maxParticipants: 0,
+      location: formData.location || "Не указано",
+      status: "active",
+    };
+    
+    // Добавляем registrationDeadline только если он указан
+    if (registrationDeadline) {
+      submitData.registrationDeadline = registrationDeadline;
+    }
+    
+    // Добавляем опциональные поля только если они заполнены
+    if (formData.eventLevel) submitData.eventLevel = formData.eventLevel;
+    if (formData.tasks) submitData.tasks = formData.tasks;
+    if (formData.organizers) submitData.organizers = formData.organizers;
+    
+    console.log("📦 Отправляем на сервер:", submitData);
+    onSubmit(submitData);
     onClose();
   };
 
@@ -208,7 +266,7 @@ const ModalAddWindow = ({
       <div 
         className="modalWindow" 
         ref={modalRef} 
-        onClick={(e) => e.stopPropagation()} // Блокируем всплытие клика к оверлею
+        onClick={(e) => e.stopPropagation()}
       >
         <form className="modalContent" ref={formRef} onSubmit={handleSubmit}>
           {/* 1. Название мероприятия */}
@@ -250,9 +308,9 @@ const ModalAddWindow = ({
             />
           </div>
 
-          {/* 4. Дата проведения */}
+          {/* 4. Дата проведения (начало) */}
           <div className="formGroup">
-            <label className="formLabel required">Дата проведения</label>
+            <label className="formLabel required">Дата проведения (начало)</label>
             <input
               type="date"
               name="date"
@@ -263,9 +321,9 @@ const ModalAddWindow = ({
             />
           </div>
 
-          {/* 5. Время проведения */}
+          {/* 5. Время проведения (начало) */}
           <div className="formGroup">
-            <label className="formLabel">Время проведения</label>
+            <label className="formLabel">Время проведения (начало)</label>
             <input
               type="time"
               name="time"
@@ -274,7 +332,56 @@ const ModalAddWindow = ({
             />
           </div>
 
-          {/* 6. Адрес проведения */}
+          {/* 6. Дата окончания */}
+          <div className="formGroup">
+            <label className="formLabel">Дата окончания</label>
+            <input
+              type="date"
+              name="endDate"
+              value={formData.endDate}
+              onChange={handleChange}
+              min={formData.date}
+              max={getMaxEventDate()}
+            />
+          </div>
+
+          {/* 7. Время окончания */}
+          <div className="formGroup">
+            <label className="formLabel">Время окончания</label>
+            <input
+              type="time"
+              name="endTime"
+              value={formData.endTime}
+              onChange={handleChange}
+              placeholder="23:59"
+            />
+          </div>
+
+          {/* 8. Дедлайн регистрации (дата) */}
+          <div className="formGroup">
+            <label className="formLabel">Дедлайн регистрации (дата)</label>
+            <input
+              type="date"
+              name="registrationDeadline"
+              value={formData.registrationDeadline}
+              onChange={handleChange}
+              max={formData.date}
+            />
+          </div>
+
+          {/* 9. Дедлайн регистрации (время) */}
+          <div className="formGroup">
+            <label className="formLabel">Дедлайн регистрации (время)</label>
+            <input
+              type="time"
+              name="registrationDeadlineTime"
+              value={formData.registrationDeadlineTime}
+              onChange={handleChange}
+              placeholder="23:59"
+            />
+          </div>
+
+          {/* 10. Адрес проведения */}
           <div className="formGroup">
             <label className="formLabel">Адрес проведения</label>
             <input
@@ -285,9 +392,9 @@ const ModalAddWindow = ({
             />
           </div>
 
-          {/* 7. Описание мероприятия */}
+          {/* 11. Описание мероприятия */}
           <div className="formGroup">
-            <label className="formLabel">Описание мероприятия (можно несколько строк)</label>
+            <label className="formLabel">Описание мероприятия</label>
             <textarea
               ref={descriptionRef}
               name="description"
@@ -298,9 +405,9 @@ const ModalAddWindow = ({
             />
           </div>
 
-          {/* 8. Задачи на мероприятие */}
+          {/* 12. Задачи на мероприятие */}
           <div className="formGroup">
-            <label className="formLabel">Задачи на мероприятие (можно несколько строк)</label>
+            <label className="formLabel">Задачи на мероприятие</label>
             <textarea
               ref={tasksRef}
               name="tasks"
@@ -311,9 +418,9 @@ const ModalAddWindow = ({
             />
           </div>
 
-          {/* 9. Организаторы */}
+          {/* 13. Организаторы */}
           <div className="formGroup">
-            <label className="formLabel">Организаторы (можно несколько строк)</label>
+            <label className="formLabel">Организаторы</label>
             <textarea
               ref={organizersRef}
               name="organizers"
@@ -324,7 +431,7 @@ const ModalAddWindow = ({
             />
           </div>
 
-          {/* 10. Количество баллов */}
+          {/* 14. Количество баллов */}
           <div className="formGroup">
             <label className="formLabel required">
               Количество баллов за мероприятие

@@ -27,6 +27,10 @@ function AppLayout({ children, isUserLoggedIn, requiresAuth }) {
   const isNavigating = useRef(false);
   
   const getPageFromPath = (pathname) => {
+    // ✅ Игнорируем пути с eventId (содержат UUID)
+    if (pathname.includes('/events/') && !pathname.endsWith('/events')) {
+      return null; // Это детальная страница, не меняем currentPage
+    }
     const page = pathname.replace(/^\/siblions\//, '').split('/')[0];
     return VALID_PAGES.includes(page) ? page : null;
   };
@@ -104,6 +108,9 @@ function App() {
   return (
     <BrowserRouter basename="/siblions">
       <Routes>
+        {/* ✅ ВАЖНО: Сначала идут более конкретные пути */}
+        
+        {/* Детальная страница мероприятия (с UUID) - НЕ требует авторизации */}
         <Route 
           path="/events/:eventId" 
           element={
@@ -113,8 +120,10 @@ function App() {
           } 
         />
         
+        {/* Редирект с корня */}
         <Route path="/" element={<Navigate to="/events" replace />} />
         
+        {/* Список мероприятий - ТРЕБУЕТ авторизации */}
         <Route 
           path="/events" 
           element={
@@ -124,7 +133,7 @@ function App() {
           } 
         />
         
-        {/* Защищенные маршруты: добавили requiresAuth={true} */}
+        {/* Защищенные маршруты */}
         <Route 
           path="/orders" 
           element={
@@ -133,6 +142,8 @@ function App() {
             </AppLayout>
           } 
         />
+        
+        {/* Личный кабинет - НЕ требует авторизации (показывает форму входа) */}
         <Route 
           path="/personalAccount" 
           element={
@@ -141,6 +152,8 @@ function App() {
             </AppLayout>
           } 
         />
+        
+        {/* Статистика - ТРЕБУЕТ авторизации */}
         <Route 
           path="/statistics" 
           element={
@@ -150,6 +163,7 @@ function App() {
           } 
         />
         
+        {/* 404 - перенаправление на события */}
         <Route path="*" element={<Navigate to="/events" replace />} />
       </Routes>
     </BrowserRouter>
