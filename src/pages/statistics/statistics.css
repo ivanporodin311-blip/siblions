@@ -118,6 +118,17 @@
   padding: 20px 0;
 }
 
+.loadingText {
+  font-family: "Kontora", sans-serif;
+  font-size: 18px;
+  color: rgba(0, 52, 102, 1);
+  text-align: center;
+  padding: 40px;
+  background: #f8fafc;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
 .chartWrapper {
   min-height: 300px;
 }
