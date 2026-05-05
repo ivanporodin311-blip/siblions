@@ -29,12 +29,17 @@ export const useAuthSlice = (set, get) => ({
         if (query && query.includes('code=')) {
           const oauthStatus = await tryOAuth(query);
           if (oauthStatus) {
+<<<<<<< HEAD
             // Чистим URL после успешного входа
+=======
+            await tryMeAuth();
+>>>>>>> origin/Ivan
             window.history.replaceState({}, document.title, window.location.pathname);
             return true;
           }
         }
 
+<<<<<<< HEAD
         // 2. Проверка Zustand persist (localStorage) - основной источник истины
         const isPersisted = await checkPersistedState();
         if (isPersisted) return true;
@@ -45,6 +50,17 @@ export const useAuthSlice = (set, get) => ({
           // Если рефреш успешен, пробуем ещё раз проверить localStorage
           return await checkPersistedState();
         }
+=======
+        // 2. Проверка живой сессии (по кукам через /me)
+        // const isMe = await tryMeAuth();
+        // if (isMe) return true;
+
+        // 3. Попытка рефреша сессии
+        // const isRefreshed = await refreshLogin();
+        // if (isRefreshed) {
+        //   return await tryMeAuth();
+        // }
+>>>>>>> origin/Ivan
 
         // Если ничего не сработало — пользователь не авторизован
         return false;
@@ -106,8 +122,24 @@ export const useAuthSlice = (set, get) => ({
 
       startAuthLoading();
       try {
+<<<<<<< HEAD
         await fetchAndSetAuth(authPayload);
         // Не нужно устанавливать localStorage.setItem('auth', 'true') - zustand persist делает это автоматически
+=======
+        // Прокидываем payload в fetchAndSetAuth
+        const authResult = await fetchAndSetAuth(authPayload);
+        
+        // ✅ СОХРАНЯЕМ ТОКЕН ПОСЛЕ УСПЕШНОЙ АВТОРИЗАЦИИ
+        if (authResult && authResult.token) {
+          localStorage.setItem('auth_token', authResult.token);
+          console.log('✅ Токен сохранён в localStorage');
+        } else if (authResult && authResult.user && authResult.user.token) {
+          localStorage.setItem('auth_token', authResult.user.token);
+          console.log('✅ Токен сохранён из user объекта');
+        }
+        
+        localStorage.setItem('auth', 'true');
+>>>>>>> origin/Ivan
         return true;
       } catch (error) {
         handleAuthError(error);
@@ -122,6 +154,16 @@ export const useAuthSlice = (set, get) => ({
      */
     setAuthenticated: async (userData) => {
       const { notifyAuthState } = get().authSliceMethods;
+      
+      // ✅ СОХРАНЯЕМ ТОКЕН ЕСЛИ ОН ЕСТЬ В userData
+      if (userData && userData.token) {
+        localStorage.setItem('auth_token', userData.token);
+        console.log('✅ Токен сохранён в setAuthenticated');
+      } else if (userData && userData.user && userData.user.token) {
+        localStorage.setItem('auth_token', userData.user.token);
+        console.log('✅ Токен сохранён из user объекта в setAuthenticated');
+      }
+      
       const encryptedUser = _encryptData(userData);
 
       set((state) => ({
@@ -143,6 +185,7 @@ export const useAuthSlice = (set, get) => ({
       const { setAuthenticated } = get().authSliceMethods;
 
       const authData = await fetchAuth(authPayload);
+<<<<<<< HEAD
 
       if (!authData) {
         throw new Error("Сервер не вернул данные пользователя");
@@ -151,6 +194,14 @@ export const useAuthSlice = (set, get) => ({
       // Бэкенд может вернуть { user: {...} } или плоский объект
       const userData = authData.user || authData;
       await setAuthenticated(userData);
+=======
+      
+      if (!authData) throw new Error("Сервер не вернул данные пользователя");
+      
+      // ✅ Возвращаем authData для дальнейшей обработки токена
+      await setAuthenticated(authData);
+      return authData; // Возвращаем данные для tryOAuth
+>>>>>>> origin/Ivan
     },
 
     // === Утилиты состояния ===
@@ -212,6 +263,11 @@ export const useAuthSlice = (set, get) => ({
       }
 
       // Полная зачистка всех следов
+<<<<<<< HEAD
+=======
+      localStorage.removeItem('auth');
+      localStorage.removeItem('auth_token'); // ✅ Удаляем токен
+>>>>>>> origin/Ivan
       sessionStorage.removeItem('code_verifier');
       sessionStorage.removeItem('codeVerifier');
       sessionStorage.removeItem('oauth_state');

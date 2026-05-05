@@ -1,11 +1,11 @@
-// src/pages/events/EventDetailsPage.jsx (АДМИНСКАЯ ВЕРСИЯ)
+// src/pages/events/EventDetailsPage.jsx (ПОЛНОСТЬЮ ИСПРАВЛЕННАЯ ВЕРСИЯ)
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import useEventStore from '../../stores/eventStore';
 import './eventDetails.css';
 
 const EventDetailsPage = () => {
-  const { eventId } = useParams();
+  const { eventId } = useParams(); // Получаем UUID из URL
   const navigate = useNavigate();
   
   // Состояния
@@ -34,9 +34,13 @@ const EventDetailsPage = () => {
     organizerId: null
   });
 
+  // ✅ Проверяем, что eventId существует и не undefined
   useEffect(() => {
-    if (eventId) {
-      fetchEventById(parseInt(eventId));
+    if (eventId && eventId !== 'undefined' && eventId !== 'NaN') {
+      console.log('📡 Загружаем мероприятие с UUID:', eventId);
+      fetchEventById(eventId);
+    } else {
+      console.error('❌ eventId невалиден:', eventId);
     }
   }, [eventId, fetchEventById]);
 
@@ -69,7 +73,11 @@ const EventDetailsPage = () => {
   };
 
   const handleSave = async () => {
-    const result = await updateEvent(parseInt(eventId), formData);
+    if (!eventId || eventId === 'undefined') {
+      console.error('❌ Нельзя сохранить: eventId невалиден');
+      return;
+    }
+    const result = await updateEvent(eventId, formData);
     if (result) {
       setSaveSuccess(true);
       setIsEditing(false);
@@ -78,8 +86,12 @@ const EventDetailsPage = () => {
   };
 
   const handleDelete = async () => {
+    if (!eventId || eventId === 'undefined') {
+      console.error('❌ Нельзя удалить: eventId невалиден');
+      return;
+    }
     if (window.confirm('Вы уверены, что хотите удалить это мероприятие?')) {
-      const result = await deleteEvent(parseInt(eventId));
+      const result = await deleteEvent(eventId);
       if (result) {
         navigate('/events');
       }
@@ -88,7 +100,6 @@ const EventDetailsPage = () => {
 
   const handleCancel = () => {
     setIsEditing(false);
-    // Восстанавливаем данные из события
     if (event) {
       setFormData({
         title: event.title || '',
@@ -107,7 +118,6 @@ const EventDetailsPage = () => {
     }
   };
 
-  // Форматирование даты для отображения
   const formatDate = (dateString) => {
     if (!dateString) return 'Дата не указана';
     const date = new Date(dateString);
@@ -155,6 +165,19 @@ const EventDetailsPage = () => {
     setIsRegistered(true);
     setTimeout(() => setRegistrationSuccess(false), 3000);
   };
+
+  // ✅ Проверка на валидность eventId
+  if (!eventId || eventId === 'undefined' || eventId === 'NaN') {
+    return (
+      <div className="event-detail not-found">
+        <h1>Ошибка</h1>
+        <p>Неверный идентификатор мероприятия</p>
+        <button onClick={() => navigate('/events')} className="back-btn">
+          Вернуться к мероприятиям
+        </button>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -238,7 +261,6 @@ const EventDetailsPage = () => {
         <div className="event-detail-content">
           {/* Левая колонка */}
           <div className="event-info">
-            {/* Дата и место */}
             <div className="event-date-location">
               <div className="date-time">
                 <svg className="icon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
@@ -296,7 +318,6 @@ const EventDetailsPage = () => {
               </div>
             </div>
 
-            {/* Описание */}
             <div className="event-full-description">
               <h3>Описание мероприятия</h3>
               {!isEditing ? (
@@ -313,7 +334,6 @@ const EventDetailsPage = () => {
               )}
             </div>
 
-            {/* Детали мероприятия */}
             <div className="event-details">
               <h3>Детали мероприятия</h3>
               <div className="details-grid">
@@ -425,7 +445,7 @@ const EventDetailsPage = () => {
                 
                 <div className="detail-item">
                   <span className="detail-label">ID мероприятия:</span>
-                  <span className="detail-value">#{event.id}</span>
+                  <span className="detail-value">#{event.uuid || event.id || eventId}</span>
                 </div>
                 
                 <div className="detail-item">
@@ -446,23 +466,24 @@ const EventDetailsPage = () => {
               </div>
             </div>
 
-            {/* Даты создания и обновления */}
-            <div className="event-meta">
-              <h3>Информация о публикации</h3>
-              <div className="meta-grid">
-                <div className="meta-item">
-                  <span className="meta-label">Создано:</span>
-                  <span className="meta-value">{formatDate(event.createdAt)}</span>
-                </div>
-                <div className="meta-item">
-                  <span className="meta-label">Обновлено:</span>
-                  <span className="meta-value">{formatDate(event.updatedAt)}</span>
+            {event.createdAt && (
+              <div className="event-meta">
+                <h3>Информация о публикации</h3>
+                <div className="meta-grid">
+                  <div className="meta-item">
+                    <span className="meta-label">Создано:</span>
+                    <span className="meta-value">{formatDate(event.createdAt)}</span>
+                  </div>
+                  <div className="meta-item">
+                    <span className="meta-label">Обновлено:</span>
+                    <span className="meta-value">{formatDate(event.updatedAt)}</span>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
-          {/* Правая колонка - регистрация */}
+          {/* Правая колонка */}
           <div className="event-registration">
             <div className="registration-card">
               <h3>Регистрация</h3>
