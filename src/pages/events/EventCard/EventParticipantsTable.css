@@ -2,7 +2,7 @@
 @import url("/src/assets/colors/colors.css");
 
 .participantsTable {
-  width: 1243px;
+  width: auto;
   height: 456px;
   background: white;
   border: 1px solid #d5e2f1;
@@ -55,6 +55,73 @@
 }
 
 /* Ширины столбцов */
+.tableCell.edit {
+  width: 48px;
+  min-width: 48px;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tableCell.delete {
+  width: 48px;
+  min-width: 48px;
+  justify-content: center;
+  flex-shrink: 0;
+  flex: 0 0 48px;
+}
+
+
+.tableActionBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #003466;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.tableActionBtn:hover {
+  background: #e8f0f8;
+  color: #002244;
+}
+
+.tableActionBtn--edit,
+.tableActionBtn--delete {
+  width: 32px;
+  height: 32px;
+}
+
+.tableActionBtn--delete:hover {
+  color: #c62828;
+  background: #ffebee;
+}
+
+.tableEditInput {
+  width: 100%;
+  padding: 6px 10px;
+  font-family: "Kontora", sans-serif;
+  font-size: 16px;
+  color: #333;
+  border: 1px solid #d5e2f1;
+  border-radius: 8px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.tableEditInput:focus {
+  border-color: var(--blueColor);
+}
+
+.tableRow.editing {
+  background-color: #f8fafd;
+}
+
 .tableCell.number {
   width: 60px;
   min-width: 60px;
@@ -122,6 +189,11 @@
   font-weight: 600;
   color: var(--blueColor);
   padding-right: 20px;
+}
+
+.tableHeader .tableCell.edit,
+.tableHeader .tableCell.delete {
+  padding: 15px 8px;
 }
 
 /* Поле ввода баллов */

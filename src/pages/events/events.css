@@ -24,7 +24,7 @@
 .eventsGrid {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 0px;
   align-items: flex-start; /* без центрирования — как при наличии карточек */
 }
 

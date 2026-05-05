@@ -16,6 +16,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.3s ease;
 }
 
 .personalAccountButton--inactive {
@@ -27,6 +28,17 @@
 .personalAccountButton--inactive:hover {
   background: var(--blueHoverColor);
   border: var(--blueHoverColor) 2px solid;
+}
+
+.personalAccountButton--loggedIn {
+  background: linear-gradient(135deg, var(--blueColor), #4caf50);
+  border: 2px solid #4caf50;
+  box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
+}
+
+.personalAccountButton--loggedIn:hover {
+  background: linear-gradient(135deg, var(--blueHoverColor), #45a049);
+  border-color: #45a049;
 }
 
 .personalAccountButton--active {

@@ -1,6 +1,35 @@
 @import url("/src/assets/fonts/fonts.css");
 @import url("/src/assets/colors/colors.css");
 
+/* Toast-уведомление (как во вкладке Мероприятия) */
+.ordersToast {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  font-family: "Kontora", sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  color: #fff;
+  background: var(--blueColor);
+  padding: 12px 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 52, 102, 0.3);
+  animation: ordersToastFadeIn 0.3s ease-out;
+}
+
+@keyframes ordersToastFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
 .ordersPage {
   width: 100%;
   max-width: 1366px;
@@ -8,38 +37,26 @@
   margin: 0 auto;
 }
 
+.ordersPageTitle {
+  font-family: "Kontora", sans-serif;
+  font-weight: 700;
+  font-size: 55px;
+  color: rgba(0, 52, 102, 1);
+  margin: 0 0 40px 0;
+  line-height: 1.2;
+}
+
 .ordersContentContainer {
   width: 100%;
   max-width: 1308px;
   margin: 0 auto;
+  background: #ffffff;
   border-radius: 25px;
   overflow: hidden;
   box-shadow: 0px 0px 6px 2px rgba(0, 52, 102, 0.42);
 }
 
-.ordersTitleContainer {
-  width: 100%;
-  height: 97px;
-  background: linear-gradient(90deg, #003466 0%, #004d97 100%);
-  display: flex;
-  align-items: center;
-  padding: 25px 20px 17px 20px;
-  box-sizing: border-box;
-  border-radius: 25px 25px 0 0;
-}
-
-.ordersTitle {
-  font-family: "Kontora", sans-serif;
-  font-weight: 700;
-  font-size: 30px;
-  color: #ffffff;
-  margin: 0;
-  width: 100%;
-}
-
 .ordersMainContent {
-  background: #ffffff;
-  border-radius: 0 0 25px 25px;
   padding: 0;
   overflow-x: auto;
 }
@@ -49,31 +66,26 @@
   width: 100%;
   border-collapse: collapse;
   font-family: "Kontora", sans-serif;
-  min-width: 800px;
+  min-width: 700px;
+  table-layout: fixed;
 }
 
 .ordersTable thead {
   background: #f8fafc;
 }
 
-/* Заголовки таблицы */
-.ordersTable th {
-  padding: 20px 15px;
-  text-align: left;
-  font-weight: 600;
-  font-size: 16px;
-  color: #003466;
-  border-bottom: 1px solid #e2e8f0;
-  white-space: nowrap;
-}
-
-/* Ячейки таблицы */
+.ordersTable th,
 .ordersTable td {
-  padding: 15px;
+  padding: 16px 20px;
   font-size: 15px;
   color: #333333;
   border-bottom: 1px solid #f1f5f9;
-  vertical-align: top;
+}
+
+.ordersTable th {
+  font-weight: 600;
+  font-size: 16px;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .ordersTable tbody tr:last-child td {
@@ -84,76 +96,44 @@
   background-color: #f8fafc;
 }
 
-/* Колонка № - исправленная */
-.orderNumber {
-  width: 5%;
-  min-width: 50px;
+.ordersTable td {
+  vertical-align: top;
 }
 
-.ordersTable th.orderNumber {
-  text-align: center;
-  padding-left: 0;
-  padding-right: 0;
-}
-
+/* Равномерное распределение колонок */
+.ordersTable th.orderNumber,
 .ordersTable td.orderNumber {
+  width: 8%;
   text-align: center;
-  padding-left: 0;
-  padding-right: 0;
   font-weight: 600;
   color: #003466;
 }
 
-/* Колонка ФИО */
-.orderCustomer {
-  width: 25%;
-  min-width: 200px;
-}
-
 .ordersTable th.orderCustomer,
 .ordersTable td.orderCustomer {
-  padding-left: 15px;
+  width: 30%;
+  text-align: left;
 }
 
-/* Колонка Группа - исправленная */
-.orderGroup {
-  width: 10%;
-  min-width: 80px;
-}
-
-.ordersTable th.orderGroup {
+.ordersTable th.orderGroup,
+.ordersTable td.orderGroup {
+  width: 18%;
   text-align: center;
-  padding-left: 0;
-  padding-right: 0;
 }
 
 .ordersTable td.orderGroup {
-  text-align: center;
-  padding-left: 0;
-  padding-right: 0;
   font-weight: 500;
-}
-
-/* Колонка Товары */
-.orderProducts {
-  width: 35%;
-  min-width: 250px;
 }
 
 .ordersTable th.orderProducts,
 .ordersTable td.orderProducts {
-  padding-left: 15px;
-}
-
-/* Колонка Статус */
-.orderStatus {
-  width: 15%;
-  min-width: 150px;
+  width: 28%;
+  text-align: left;
 }
 
 .ordersTable th.orderStatus,
 .ordersTable td.orderStatus {
-  padding-left: 15px;
+  width: 16%;
 }
 
 /* Товары в столбик */
@@ -200,7 +180,6 @@
   justify-content: flex-end;
   padding: 20px 30px;
   background: #ffffff;
-  border-radius: 0 0 25px 25px;
   border-top: 1px solid #f1f5f9;
 }
 
@@ -226,7 +205,6 @@
   padding: 60px 20px;
   text-align: center;
   background: #ffffff;
-  border-radius: 0 0 25px 25px;
 }
 
 .noOrdersMessage {
@@ -273,8 +251,9 @@
     padding-left: 8px;
   }
 
-  .ordersTitle {
-    font-size: 24px;
+  .ordersPageTitle {
+    font-size: 40px;
+    margin-bottom: 30px;
   }
 
   .actionButtons {

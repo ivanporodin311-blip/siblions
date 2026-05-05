@@ -92,6 +92,28 @@ const addParticipant = (name, group, school) => {
   return newParticipant;
 };
 
+// Обновить данные участника
+const updateParticipant = (id, { name, group, school }) => {
+  const allParticipants = getAllParticipants();
+  const index = allParticipants.findIndex((p) => p.id === id);
+  if (index === -1) return null;
+  const updated = {
+    ...allParticipants[index],
+    ...(name !== undefined && { name }),
+    ...(group !== undefined && { group }),
+    ...(school !== undefined && { school }),
+  };
+  allParticipants[index] = updated;
+  localStorage.setItem("all_participants", JSON.stringify(allParticipants));
+  return updated;
+};
+
+// Удалить участника из базы
+const removeParticipant = (id) => {
+  const allParticipants = getAllParticipants().filter((p) => p.id !== id);
+  localStorage.setItem("all_participants", JSON.stringify(allParticipants));
+};
+
 // Получить участников для мероприятия с их баллами
 const getParticipantsForEvent = (eventId, eventPointsDefault) => {
   const allParticipants = getAllParticipants();
@@ -110,4 +132,6 @@ export {
   getTotalPointsForParticipant,
   addParticipant,
   getParticipantsForEvent,
+  updateParticipant,
+  removeParticipant,
 };

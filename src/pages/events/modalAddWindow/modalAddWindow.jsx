@@ -24,6 +24,12 @@ const EVENT_LEVELS = [
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 МБ
 
+const getMaxEventDate = () => {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() + 3);
+  return d.toISOString().slice(0, 10);
+};
+
 const ModalAddWindow = ({
   onClose,
   onSubmit,
@@ -33,6 +39,7 @@ const ModalAddWindow = ({
 }) => {
   const modalRef = useRef(null);
   const fileInputRef = useRef(null);
+  const formRef = useRef(null);
   const descriptionRef = useRef(null);
   const tasksRef = useRef(null);
   const organizersRef = useRef(null);
@@ -48,6 +55,10 @@ const ModalAddWindow = ({
     location: "",
     date: "",
     time: "",
+    endDate: "",
+    endTime: "",
+    registrationDeadline: "",
+    registrationDeadlineTime: "",
     sportType: "",
     eventLevel: "",
     description: "",
@@ -63,14 +74,18 @@ const ModalAddWindow = ({
       setFormData({
         title: eventToEdit.title || "",
         location: eventToEdit.location || "",
-        date: eventToEdit.date || "",
-        time: eventToEdit.time || "",
-        sportType: eventToEdit.sportType || "",
+        date: eventToEdit.startDate ? eventToEdit.startDate.slice(0, 10) : "",
+        time: eventToEdit.startDate ? eventToEdit.startDate.slice(11, 16) : "",
+        endDate: eventToEdit.endDate ? eventToEdit.endDate.slice(0, 10) : "",
+        endTime: eventToEdit.endDate ? eventToEdit.endDate.slice(11, 16) : "23:59",
+        registrationDeadline: eventToEdit.registrationDeadline ? eventToEdit.registrationDeadline.slice(0, 10) : "",
+        registrationDeadlineTime: eventToEdit.registrationDeadline ? eventToEdit.registrationDeadline.slice(11, 16) : "23:59",
+        sportType: eventToEdit.eventType || "",
         eventLevel: eventToEdit.eventLevel || "",
         description: eventToEdit.description || "",
         tasks: eventToEdit.tasks || "",
         organizers: eventToEdit.organizers || "",
-        points: eventToEdit.points || "",
+        points: eventToEdit.participantPoints || "",
         attachedFileName: eventToEdit.attachedFileName || "",
         attachedFileData: eventToEdit.attachedFileData || "",
       });
@@ -86,19 +101,48 @@ const ModalAddWindow = ({
     return () => cancelAnimationFrame(timer);
   }, [formData.description, formData.tasks, formData.organizers]);
 
+  const fileDialogOpenRef = useRef(false);
+  const scrollPosRef = useRef(0);
+
+  useEffect(() => {
+    const onWindowBlur = () => {
+      if (fileDialogOpenRef.current && formRef.current) {
+        scrollPosRef.current = formRef.current.scrollTop;
+      }
+    };
+    const onWindowFocus = () => {
+      if (fileDialogOpenRef.current) {
+        if (formRef.current) {
+          formRef.current.scrollTop = scrollPosRef.current;
+        }
+        setTimeout(() => {
+          if (formRef.current) {
+            formRef.current.scrollTop = scrollPosRef.current;
+          }
+          fileDialogOpenRef.current = false;
+        }, 100);
+      }
+    };
+    window.addEventListener("blur", onWindowBlur);
+    window.addEventListener("focus", onWindowFocus);
+    return () => {
+      window.removeEventListener("blur", onWindowBlur);
+      window.removeEventListener("focus", onWindowFocus);
+    };
+  }, []);
+
   useEffect(() => {
     const onEsc = (e) => e.key === "Escape" && onClose();
-    const onClickOutside = (e) =>
-      modalRef.current && !modalRef.current.contains(e.target) && onClose();
-
     document.addEventListener("keydown", onEsc);
-    document.addEventListener("mousedown", onClickOutside);
-
-    return () => {
-      document.removeEventListener("keydown", onEsc);
-      document.removeEventListener("mousedown", onClickOutside);
-    };
+    return () => document.removeEventListener("keydown", onEsc);
   }, [onClose]);
+  
+  const handleOverlayClick = (e) => {
+    if (fileDialogOpenRef.current) return;
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -108,17 +152,32 @@ const ModalAddWindow = ({
     }
   };
 
+  const [fileError, setFileError] = useState("");
+
+  const handleFileClick = () => {
+    fileDialogOpenRef.current = true;
+    if (formRef.current) {
+      scrollPosRef.current = formRef.current.scrollTop;
+    }
+  };
+
   const handleFileChange = (e) => {
+    fileDialogOpenRef.current = false;
     const file = e.target.files?.[0];
+    
     if (!file) {
-      setFormData((p) => ({ ...p, attachedFileName: "", attachedFileData: "" }));
+      setFileError("");
       return;
     }
+
     if (file.size > MAX_FILE_SIZE) {
-      alert("Файл слишком большой. Максимум 2 МБ.");
-      e.target.value = "";
+      setFileError("Файл слишком большой. Максимум 2 МБ.");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      setFormData(p => ({ ...p, attachedFileName: "", attachedFileData: "" }));
       return;
     }
+
+    setFileError("");
     const reader = new FileReader();
     reader.onload = () => {
       setFormData((p) => ({
@@ -128,17 +187,70 @@ const ModalAddWindow = ({
       }));
     };
     reader.readAsDataURL(file);
-    e.target.value = "";
   };
 
-  const handleRemoveFile = () => {
+  const handleRemoveFile = (e) => {
+    e.stopPropagation();
     setFormData((p) => ({ ...p, attachedFileName: "", attachedFileData: "" }));
+    setFileError("");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  // ✅ ИСПРАВЛЕННАЯ handleSubmit - можно указывать все даты
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
+    
+    // Создаем ISO дату начала
+    let startDate = null;
+    if (formData.date) {
+      const startTime = formData.time || "00:00";
+      startDate = new Date(`${formData.date}T${startTime}:00`).toISOString();
+    }
+    
+    // Создаем ISO дату окончания
+    let endDate = null;
+    if (formData.endDate) {
+      const endTime = formData.endTime || "23:59";
+      endDate = new Date(`${formData.endDate}T${endTime}:59`).toISOString();
+    } else if (formData.date) {
+      // Если endDate не указан, используем дату начала
+      const endTime = formData.endTime || "23:59";
+      endDate = new Date(`${formData.date}T${endTime}:59`).toISOString();
+    }
+    
+    // Создаем ISO дату дедлайна регистрации
+    let registrationDeadline = null;
+    if (formData.registrationDeadline) {
+      const deadlineTime = formData.registrationDeadlineTime || "23:59";
+      registrationDeadline = new Date(`${formData.registrationDeadline}T${deadlineTime}:59`).toISOString();
+    }
+    
+    // Формируем данные для сервера (только с валидными значениями)
+    const submitData = {
+      title: formData.title,
+      description: formData.description || "",
+      eventType: formData.sportType || "sport",
+      startDate: startDate,
+      endDate: endDate,
+      participantPoints: parseInt(formData.points) || 0,
+      fanPoints: 0,
+      maxParticipants: 0,
+      location: formData.location || "Не указано",
+      status: "active",
+    };
+    
+    // Добавляем registrationDeadline только если он указан
+    if (registrationDeadline) {
+      submitData.registrationDeadline = registrationDeadline;
+    }
+    
+    // Добавляем опциональные поля только если они заполнены
+    if (formData.eventLevel) submitData.eventLevel = formData.eventLevel;
+    if (formData.tasks) submitData.tasks = formData.tasks;
+    if (formData.organizers) submitData.organizers = formData.organizers;
+    
+    console.log("📦 Отправляем на сервер:", submitData);
+    onSubmit(submitData);
     onClose();
   };
 
@@ -150,9 +262,13 @@ const ModalAddWindow = ({
   };
 
   return (
-    <div className="modalOverlay">
-      <div className="modalWindow" ref={modalRef}>
-        <form className="modalContent" onSubmit={handleSubmit}>
+    <div className="modalOverlay" onClick={handleOverlayClick}>
+      <div 
+        className="modalWindow" 
+        ref={modalRef} 
+        onClick={(e) => e.stopPropagation()}
+      >
+        <form className="modalContent" ref={formRef} onSubmit={handleSubmit}>
           {/* 1. Название мероприятия */}
           <div className="formGroup">
             <label className="formLabel required">
@@ -192,21 +308,22 @@ const ModalAddWindow = ({
             />
           </div>
 
-          {/* 4. Дата проведения */}
+          {/* 4. Дата проведения (начало) */}
           <div className="formGroup">
-            <label className="formLabel required">Дата проведения</label>
+            <label className="formLabel required">Дата проведения (начало)</label>
             <input
               type="date"
               name="date"
               value={formData.date}
               onChange={handleChange}
+              max={getMaxEventDate()}
               required
             />
           </div>
 
-          {/* 5. Время проведения */}
+          {/* 5. Время проведения (начало) */}
           <div className="formGroup">
-            <label className="formLabel">Время проведения</label>
+            <label className="formLabel">Время проведения (начало)</label>
             <input
               type="time"
               name="time"
@@ -215,7 +332,56 @@ const ModalAddWindow = ({
             />
           </div>
 
-          {/* 6. Адрес проведения */}
+          {/* 6. Дата окончания */}
+          <div className="formGroup">
+            <label className="formLabel">Дата окончания</label>
+            <input
+              type="date"
+              name="endDate"
+              value={formData.endDate}
+              onChange={handleChange}
+              min={formData.date}
+              max={getMaxEventDate()}
+            />
+          </div>
+
+          {/* 7. Время окончания */}
+          <div className="formGroup">
+            <label className="formLabel">Время окончания</label>
+            <input
+              type="time"
+              name="endTime"
+              value={formData.endTime}
+              onChange={handleChange}
+              placeholder="23:59"
+            />
+          </div>
+
+          {/* 8. Дедлайн регистрации (дата) */}
+          <div className="formGroup">
+            <label className="formLabel">Дедлайн регистрации (дата)</label>
+            <input
+              type="date"
+              name="registrationDeadline"
+              value={formData.registrationDeadline}
+              onChange={handleChange}
+              max={formData.date}
+            />
+          </div>
+
+          {/* 9. Дедлайн регистрации (время) */}
+          <div className="formGroup">
+            <label className="formLabel">Дедлайн регистрации (время)</label>
+            <input
+              type="time"
+              name="registrationDeadlineTime"
+              value={formData.registrationDeadlineTime}
+              onChange={handleChange}
+              placeholder="23:59"
+            />
+          </div>
+
+          {/* 10. Адрес проведения */}
           <div className="formGroup">
             <label className="formLabel">Адрес проведения</label>
             <input
@@ -226,9 +392,9 @@ const ModalAddWindow = ({
             />
           </div>
 
-          {/* 7. Описание мероприятия */}
+          {/* 11. Описание мероприятия */}
           <div className="formGroup">
-            <label className="formLabel">Описание мероприятия (можно несколько строк)</label>
+            <label className="formLabel">Описание мероприятия</label>
             <textarea
               ref={descriptionRef}
               name="description"
@@ -239,9 +405,9 @@ const ModalAddWindow = ({
             />
           </div>
 
-          {/* 8. Задачи на мероприятие */}
+          {/* 12. Задачи на мероприятие */}
           <div className="formGroup">
-            <label className="formLabel">Задачи на мероприятие (можно несколько строк)</label>
+            <label className="formLabel">Задачи на мероприятие</label>
             <textarea
               ref={tasksRef}
               name="tasks"
@@ -252,9 +418,9 @@ const ModalAddWindow = ({
             />
           </div>
 
-          {/* 9. Организаторы */}
+          {/* 13. Организаторы */}
           <div className="formGroup">
-            <label className="formLabel">Организаторы (можно несколько строк)</label>
+            <label className="formLabel">Организаторы</label>
             <textarea
               ref={organizersRef}
               name="organizers"
@@ -265,7 +431,7 @@ const ModalAddWindow = ({
             />
           </div>
 
-          {/* 10. Количество баллов */}
+          {/* 14. Количество баллов */}
           <div className="formGroup">
             <label className="formLabel required">
               Количество баллов за мероприятие
@@ -288,7 +454,7 @@ const ModalAddWindow = ({
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg"
+                accept=".pdf,.doc,.docx,.txt"
                 onChange={handleFileChange}
                 className="formFileInput"
                 id="event-attachment"
@@ -296,9 +462,11 @@ const ModalAddWindow = ({
               <label
                 htmlFor="event-attachment"
                 className={`formFileLabel ${formData.attachedFileName ? "formFileLabel--hasFile" : ""}`}
+                onClick={handleFileClick}
               >
                 {formData.attachedFileName || "Выберите файл"}
               </label>
+              
               {formData.attachedFileName && (
                 <button
                   type="button"
@@ -310,7 +478,8 @@ const ModalAddWindow = ({
                 </button>
               )}
             </div>
-            <span className="formFileHint">Макс. 2 МБ. PDF, DOC, TXT, изображения.</span>
+            <span className="formFileHint">Макс. 2 МБ. PDF, DOC, DOCX, TXT.</span>
+            {fileError && <span className="formFileError">{fileError}</span>}
           </div>
 
           {/* Кнопки */}
