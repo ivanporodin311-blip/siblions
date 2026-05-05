@@ -1,74 +1,280 @@
 @import url("/src/assets/fonts/fonts.css");
 @import url("/src/assets/colors/colors.css");
 
-/* ====== Общая обёртка ====== */
+/* ====== Основной футер ====== */
 .footer {
-  width: 100%;
-  margin-top: 50px;
-}
-
-/* ====== Фон на всю ширину ====== */
-.footer__fullwidth-bg {
   width: 100%;
   background-color: var(--blueColor);
   color: var(--whiteColor);
+  padding: 0 0 30px;
+  position: relative;
+  margin-top: 80px;
 }
 
-/* ====== Центрирующий слой ====== */
-.footer__centered-wrapper {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-}
-
-/* ====== Ограничение ширины ====== */
+/* ====== Контейнер ====== */
 .footer__container {
+  margin: 0 auto;
   width: 100%;
-  max-width: 1366px;
+  max-width: 1400px;
+  padding: 0 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   box-sizing: border-box;
 }
 
-/* ====== Контент ====== */
-.footer__content {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 33px 0 99px 0;
-}
-
-/* ====== Логотип ====== */
-.footer__logo {
-  margin-left: 29px;
-  width: 160px;
-  height: 160px;
-  flex-shrink: 0;
-  cursor: pointer;
-}
-
-.footer__logo-image {
+/* ====== Логотип по центру (как во втором варианте) ====== */
+.footer__logo-wrapper {
   width: 100%;
-  height: 100%;
-  object-fit: contain;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  z-index: 10;
+  margin-bottom: 40px;
+  margin-top: -100px;
+  pointer-events: none; /* Чтобы логотип не мешал кликам */
 }
 
-/* ====== Инфо-блок ====== */
+.footer__logo-container {
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--blueColor);
+  border-radius: 50%;
+  width: 200px;
+  height: 200px;
+  pointer-events: auto; /* Возвращаем клики на логотип */
+  flex-shrink: 0;
+}
+
+.footer__logo {
+  width: 180px;
+  height: 180px;
+  object-fit: contain;
+  display: block;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.footer__logo:hover {
+  transform: scale(1.05);
+}
+
+/* ====== Инфо-блок (навигация) ====== */
 .footer__info-wrapper {
-  margin-right: 56px;
+  width: 100%;
+  margin-bottom: 40px;
 }
 
 /* ====== Разделительная линия ====== */
 .footer__divider {
   width: 100%;
-  max-width: 1366px;
   height: 1px;
   background-color: var(--whiteColor);
+  opacity: 0.2;
 }
 
 /* ====== Копирайт ====== */
 .footer__copyright {
   font-family: "Kontora", sans-serif;
   font-weight: 400;
-  font-size: 10px;
-  padding: 17px 29px;
+  font-size: 12px;
+  line-height: 16px;
+  padding: 20px 0 0;
   margin: 0;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ===== АДАПТИВНОСТЬ (из второго варианта) ===== */
+
+/* Большие экраны (1200px - 1400px) */
+@media (max-width: 1400px) {
+  .footer__container {
+    padding: 0 60px;
+  }
+}
+
+/* Планшеты и ноутбуки (до 1200px) */
+@media (max-width: 1200px) {
+  .footer__container {
+    padding: 0 40px;
+  }
+
+  .footer__logo-wrapper {
+    margin-top: -80px;
+    margin-bottom: 35px;
+  }
+
+  .footer__logo-container {
+    width: 180px;
+    height: 180px;
+  }
+
+  .footer__logo {
+    width: 160px;
+    height: 160px;
+  }
+}
+
+/* Планшеты (до 992px) */
+@media (max-width: 992px) {
+  .footer {
+    margin-top: 60px;
+  }
+
+  .footer__container {
+    padding: 0 30px;
+  }
+
+  .footer__logo-wrapper {
+    margin-top: -70px;
+    margin-bottom: 30px;
+  }
+
+  .footer__logo-container {
+    width: 160px;
+    height: 160px;
+  }
+
+  .footer__logo {
+    width: 140px;
+    height: 140px;
+  }
+}
+
+/* Маленькие планшеты (до 768px) */
+@media (max-width: 768px) {
+  .footer {
+    margin-top: 50px;
+    padding: 0 0 20px;
+  }
+
+  .footer__container {
+    padding: 0 20px;
+  }
+
+  .footer__logo-wrapper {
+    margin-top: -60px;
+    margin-bottom: 30px;
+  }
+
+  .footer__logo-container {
+    width: 150px;
+    height: 150px;
+  }
+
+  .footer__logo {
+    width: 130px;
+    height: 130px;
+  }
+}
+
+/* Мобильные устройства (до 576px) */
+@media (max-width: 576px) {
+  .footer {
+    margin-top: 45px;
+    padding: 0 0 18px;
+  }
+
+  .footer__logo-wrapper {
+    margin-top: -55px;
+    margin-bottom: 28px;
+  }
+
+  .footer__logo-container {
+    width: 130px;
+    height: 130px;
+  }
+
+  .footer__logo {
+    width: 110px;
+    height: 110px;
+  }
+
+  .footer__copyright {
+    font-size: 11px;
+  }
+}
+
+/* Очень маленькие экраны (до 480px) */
+@media (max-width: 480px) {
+  .footer {
+    margin-top: 40px;
+    padding: 0 0 15px;
+  }
+
+  .footer__logo-wrapper {
+    margin-top: -50px;
+    margin-bottom: 25px;
+  }
+
+  .footer__logo-container {
+    width: 120px;
+    height: 120px;
+  }
+
+  .footer__logo {
+    width: 100px;
+    height: 100px;
+  }
+
+  .footer__copyright {
+    font-size: 10px;
+    line-height: 14px;
+  }
+}
+
+/* Очень маленькие экраны (до 360px) */
+@media (max-width: 360px) {
+  .footer {
+    margin-top: 35px;
+  }
+
+  .footer__logo-wrapper {
+    margin-top: -40px;
+    margin-bottom: 20px;
+  }
+
+  .footer__logo-container {
+    width: 100px;
+    height: 100px;
+  }
+
+  .footer__logo {
+    width: 80px;
+    height: 80px;
+  }
+
+  .footer__copyright {
+    font-size: 9px;
+    line-height: 13px;
+  }
+}
+
+/* Очень большие экраны (более 1400px) */
+@media (min-width: 1400px) {
+  .footer__container {
+    max-width: 1600px;
+    padding: 0 100px;
+  }
+
+  .footer__logo-container {
+    width: 220px;
+    height: 220px;
+  }
+
+  .footer__logo {
+    width: 200px;
+    height: 200px;
+  }
+}
+
+/* Предотвращение горизонтального скролла */
+@media (max-width: 320px) {
+  .footer__container {
+    padding: 0 10px;
+  }
 }

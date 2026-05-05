@@ -10,45 +10,33 @@ export default function Footer({ onPageChange }) {
 
   return (
     <footer className="footer">
-      <div className="footer__fullwidth-bg">
-        {/* Основной контент футера */}
-        <div className="footer__centered-wrapper">
-          <div className="footer__container">
-            <div className="footer__content">
-              <div
-                className="footer__logo"
-                onClick={handleLogoClick}
-                role="button"
-                aria-label="Перейти на главную"
-              >
-                <img
-                  src={logoSibLions}
-                  alt="Логотип"
-                  className="footer__logo-image"
-                />
-              </div>
+      {/* Логотип по центру - перекрывает границу (как во втором варианте) */}
+      <div className="footer__logo-wrapper">
+        <div className="footer__logo-container">
+          <img
+            src={logoSibLions}
+            alt="Логотип Сибирские Львы"
+            className="footer__logo"
+            onClick={handleLogoClick}
+            role="button"
+            aria-label="Перейти на главную"
+          />
+        </div>
+      </div>
 
-              <div className="footer__info-wrapper">
-                <InfoBlock onPageChange={onPageChange} />
-              </div>
-            </div>
-          </div>
+      <div className="footer__container">
+        {/* Инфо-блок с навигацией */}
+        <div className="footer__info-wrapper">
+          <InfoBlock onPageChange={onPageChange} />
         </div>
 
         {/* Разделительная линия */}
-        <div className="footer__centered-wrapper">
-          <div className="footer__divider" />
-        </div>
+        <div className="footer__divider" />
 
         {/* Копирайт */}
-        <div className="footer__centered-wrapper">
-          <div className="footer__container">
-            <p className="footer__copyright">
-              © 2025 Национальный исследовательский Томский политехнический
-              университет
-            </p>
-          </div>
-        </div>
+        <p className="footer__copyright">
+          © 2026 Национальный исследовательский Томский политехнический университет
+        </p>
       </div>
     </footer>
   );

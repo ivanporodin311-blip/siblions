@@ -10,47 +10,56 @@ const STATUS_OPTIONS = [
   { value: "cancelled", label: "Отменен" },
 ];
 
+const INITIAL_ORDERS = [
+  {
+    id: 1,
+    orderNumber: 1,
+    customer: "Восемкин Петр Николаевич",
+    group: "8К32",
+    products: ["Футболка", "Блокнот", "Ручка"],
+    status: "received",
+  },
+  {
+    id: 2,
+    orderNumber: 2,
+    customer: "Громкин Иван Андреевич",
+    group: "8К22",
+    products: ["Блокнот", "Ручка"],
+    status: "assembled",
+  },
+  {
+    id: 3,
+    orderNumber: 3,
+    customer: "Иванов Иван Иванович",
+    group: "ИСП-42",
+    products: ["Футболка черная (M)", "Носки спортивные", "Браслет"],
+    status: "new",
+  },
+];
+
+const loadOrders = () => {
+  const saved = localStorage.getItem("ordersData");
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch {
+      return INITIAL_ORDERS;
+    }
+  }
+  return INITIAL_ORDERS;
+};
+
 const OrdersPage = () => {
-  const [orders, setOrders] = useState([]);
-  const [editedOrders, setEditedOrders] = useState({});
+  const [orders, setOrders] = useState(loadOrders);
+  const [editedOrders, setEditedOrders] = useState(() => {
+    const data = loadOrders();
+    return data.reduce((acc, o) => {
+      acc[o.id] = o.status;
+      return acc;
+    }, {});
+  });
   const [hasChanges, setHasChanges] = useState(false);
-
-  useEffect(() => {
-    const testOrders = [
-      {
-        id: 1,
-        orderNumber: 1,
-        customer: "Восемкин Петр Николаевич",
-        group: "8К32",
-        products: ["Футболка", "Блокнот", "Ручка"],
-        status: "received",
-      },
-      {
-        id: 2,
-        orderNumber: 2,
-        customer: "Громкин Иван Андреевич",
-        group: "8К22",
-        products: ["Блокнот", "Ручка"],
-        status: "assembled",
-      },
-      {
-        id: 3,
-        orderNumber: 3,
-        customer: "Иванов Иван Иванович",
-        group: "ИСП-42",
-        products: ["Футболка черная (M)", "Носки спортивные", "Браслет"],
-        status: "new",
-      },
-    ];
-
-    setOrders(testOrders);
-
-    const initialEdited = {};
-    testOrders.forEach((order) => {
-      initialEdited[order.id] = order.status;
-    });
-    setEditedOrders(initialEdited);
-  }, []);
+  const [showToast, setShowToast] = useState(false);
 
   const handleStatusChange = (orderId, newStatus) => {
     setEditedOrders((prev) => ({
@@ -63,20 +72,29 @@ const OrdersPage = () => {
   const handleSave = () => {
     const updatedOrders = orders.map((order) => ({
       ...order,
-      status: editedOrders[order.id],
+      status: editedOrders[order.id] ?? order.status,
     }));
     setOrders(updatedOrders);
+    setEditedOrders(
+      updatedOrders.reduce((acc, o) => {
+        acc[o.id] = o.status;
+        return acc;
+      }, {})
+    );
     setHasChanges(false);
-    alert("Изменения сохранены!");
+    localStorage.setItem("ordersData", JSON.stringify(updatedOrders));
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 2000);
   };
 
   return (
     <section className="ordersPage">
-      <div className="ordersContentContainer">
-        <div className="ordersTitleContainer">
-          <h1 className="ordersTitle">История заказов</h1>
-        </div>
+      {showToast && (
+        <div className="ordersToast">Изменения сохранены</div>
+      )}
+      <h1 className="ordersPageTitle">Заказы</h1>
 
+      <div className="ordersContentContainer">
         <div className="ordersMainContent">
           <table className="ordersTable">
             <thead>
