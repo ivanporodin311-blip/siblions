@@ -13,7 +13,7 @@ export async function oauthRedirect() {
     await _generateCodeVerifier();
     const codeChallenge = await _generateCodeChallenge();
     const state = _generateState();
-    
+
     if (!codeChallenge || !state) {
       throw new Error("Не удалось сгенерировать параметры безопасности (PKCE/State)");
     }
@@ -31,7 +31,7 @@ export async function oauthRedirect() {
       `code_challenge_method=S256`;
 
     console.log("Успешная генерация ссылки. Перенаправление на:", authUrl);
-    
+
     // 4. Переходим
     window.location.href = authUrl;
 
