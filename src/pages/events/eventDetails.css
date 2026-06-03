@@ -1,3 +1,20 @@
+/* eventDetails.css */
+
+/* Основные стили страницы */
+.event-detail {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.loader {
+  text-align: center;
+  padding: 40px;
+  font-size: 18px;
+  color: #666;
+}
+
 /* Админские кнопки */
 .detail-nav-buttons {
   display: flex;
@@ -6,6 +23,25 @@
   margin-bottom: 24px;
   flex-wrap: wrap;
   gap: 16px;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.back-btn:hover {
+  background: #5a6268;
 }
 
 .admin-actions {
@@ -107,4 +143,389 @@
   0% { opacity: 1; }
   70% { opacity: 1; }
   100% { opacity: 0; }
+}
+
+/* Стили для карточки мероприятия */
+.event-detail-container {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.event-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 32px;
+  background: linear-gradient(135deg, #003466 0%, #004a8f 100%);
+  color: white;
+}
+
+.event-detail-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+  font-family: "Kontora", sans-serif;
+}
+
+.event-status-badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.event-status-badge.active, .event-status-badge.published {
+  background: #28a745;
+}
+
+.event-status-badge.completed {
+  background: #6c757d;
+}
+
+.event-status-badge.cancelled {
+  background: #dc3545;
+}
+
+.event-status-badge.draft {
+  background: #ffc107;
+  color: #333;
+}
+
+/* Контент */
+.event-detail-content {
+  display: grid;
+
+  gap: 32px;
+  padding: 32px;
+}
+
+@media (max-width: 768px) {
+  .event-detail-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+.event-info {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Дата и место */
+.event-date-location {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.date-time, .location {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 16px;
+  color: #333;
+}
+
+.date {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.time {
+  color: #666;
+  font-size: 14px;
+}
+
+.address {
+  color: #666;
+}
+
+/* Описание */
+.event-full-description h3 {
+  font-size: 18px;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.event-full-description p {
+  line-height: 1.6;
+  color: #555;
+}
+
+/* Детали */
+.event-details h3 {
+  font-size: 18px;
+  margin-bottom: 16px;
+  color: #333;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-label {
+  font-size: 12px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-value {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+}
+
+/* Участники */
+.event-participants-section {
+  margin-top: 16px;
+}
+
+.participants-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.participants-header h3 {
+  font-size: 18px;
+  margin: 0;
+  color: #333;
+}
+
+.participants-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.add-participant-btn, .export-btn, .save-results-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-participant-btn {
+  background: #003466;
+  color: white;
+}
+
+.add-participant-btn:hover {
+  background: #004a8f;
+}
+
+.export-btn {
+  background: #17a2b8;
+  color: white;
+}
+
+.export-btn:hover:not(:disabled) {
+  background: #138496;
+}
+
+.save-results-btn {
+  background: #28a745;
+  color: white;
+}
+
+.save-results-btn:hover:not(:disabled) {
+  background: #218838;
+}
+
+.add-participant-btn:disabled, .export-btn:disabled, .save-results-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.add-participant-form {
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Регистрация */
+.event-registration {
+  position: sticky;
+  top: 20px;
+  align-self: start;
+}
+
+.registration-card {
+  background: #f8f9fa;
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+}
+
+.registration-card h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.registration-type {
+  margin-bottom: 20px;
+}
+
+.type-options {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.type-btn {
+  flex: 1;
+  padding: 12px;
+  border: 2px solid #ddd;
+  background: white;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.type-btn.active {
+  border-color: #003466;
+  background: #e8f0fe;
+  color: #003466;
+}
+
+.type-info {
+  text-align: left;
+  background: white;
+  padding: 16px;
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+.type-info h4 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+}
+
+.type-info ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.type-info li {
+  margin: 4px 0;
+  color: #555;
+}
+
+.register-btn {
+  width: 100%;
+  padding: 14px;
+  background: #003466;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.register-btn:hover {
+  background: #004a8f;
+}
+
+.registration-success {
+  text-align: center;
+  padding: 20px;
+}
+
+.registration-success h4 {
+  color: #28a745;
+  margin: 0;
+}
+
+.success-message {
+  margin-top: 12px;
+  padding: 10px;
+  background: #d4edda;
+  color: #155724;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+/* Тосты */
+.event-toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #28a745;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  z-index: 1000;
+  animation: slideIn 0.3s ease;
+}
+
+.event-toast.error {
+  background: #dc3545;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Страница не найдена */
+.event-detail.not-found {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.event-detail.not-found h1 {
+  font-size: 24px;
+  margin-bottom: 16px;
+  color: #333;
+}
+
+.event-detail.not-found p {
+  color: #666;
+  margin-bottom: 24px;
+}
+
+/* Иконки */
+.icon {
+  flex-shrink: 0;
 }

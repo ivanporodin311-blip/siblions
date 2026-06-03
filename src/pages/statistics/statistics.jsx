@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState, useEffect } from "react";
+import React, { useMemo, useRef, useState, useEffect, useCallback } from "react";
 import * as XLSX from "xlsx";
 import html2pdf from "html2pdf.js";
 import {
@@ -47,12 +47,79 @@ const StatisticsPage = () => {
   const [dateFrom, setDateFrom] = useState(defaultRange.from);
   const [dateTo, setDateTo] = useState(defaultRange.to);
   const reportRef = useRef(null);
+  const [loadingParticipants, setLoadingParticipants] = useState(false);
+  const [eventsWithParticipants, setEventsWithParticipants] = useState([]);
 
   const store = useEventStore();
   const events = store.events || [];
   const fetchEvents = store.fetchEvents;
+  const fetchEventParticipants = store.fetchEventParticipants;
   const eventsLoading = store.loading || false;
   const [localOrders, setLocalOrders] = useState([]);
+
+  // Загружаем участников для всех мероприятий
+  const loadAllParticipants = useCallback(async () => {
+    if (!events.length || !fetchEventParticipants) {
+      console.log('Нет мероприятий или функции загрузки');
+      return;
+    }
+    
+    console.log('📊 Загрузка участников для', events.length, 'мероприятий...');
+    setLoadingParticipants(true);
+    const eventsData = [];
+    
+    for (const event of events) {
+      const eventId = event.uuid || event.id;
+      console.log(`📡 Загружаем участников для: ${event.title} (${eventId})`);
+      
+      try {
+        const response = await fetchEventParticipants(eventId);
+        
+        let persons = [];
+        if (response?.success && response.persons) {
+          persons = response.persons;
+        } else if (response?.persons) {
+          persons = response.persons;
+        } else if (Array.isArray(response)) {
+          persons = response;
+        }
+        
+        console.log(`✅ Найдено участников: ${persons.length}`);
+        console.log('Детали участников:', persons.map(p => ({ id: p.id, role: p.role, name: p.username })));
+        
+        eventsData.push({
+          ...event,
+          participants: persons,
+          participantsCount: persons.filter(p => p.role === 'participant').length,
+          fansCount: persons.filter(p => p.role === 'fan').length,
+          totalCount: persons.length
+        });
+      } catch (error) {
+        console.error(`Ошибка для ${event.title}:`, error);
+        eventsData.push({
+          ...event,
+          participants: [],
+          participantsCount: 0,
+          fansCount: 0,
+          totalCount: 0
+        });
+      }
+    }
+    
+    console.log('📊 Всего загружено мероприятий:', eventsData.length);
+    console.log('📊 Данные с участниками:', eventsData.map(e => ({ 
+      title: e.title, 
+      participantsCount: e.participantsCount,
+      fansCount: e.fansCount 
+    })));
+    
+    setEventsWithParticipants([...eventsData]);
+    setLoadingParticipants(false);
+  }, [events, fetchEventParticipants]);
+
+  useEffect(() => {
+    loadAllParticipants();
+  }, [loadAllParticipants]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -84,14 +151,49 @@ const StatisticsPage = () => {
       const to = new Date(dateTo);
       to.setHours(23, 59, 59, 999);
 
-      // Фильтруем по startDate
-      const eventsInPeriod = events.filter((event) => {
-        if (!event.startDate) return true;
+      console.log('Фильтр дат:', { dateFrom, dateTo, from, to });
+      console.log('Всего мероприятий с участниками:', eventsWithParticipants.length);
+      console.log('Мероприятия:', eventsWithParticipants.map(e => ({ 
+        title: e.title, 
+        startDate: e.startDate,
+        participantsCount: e.participantsCount 
+      })));
+
+      const eventsInPeriod = eventsWithParticipants.filter((event) => {
+        if (!event.startDate) {
+          console.log(`Нет startDate у ${event.title}, включаем`);
+          return true;
+        }
         const d = new Date(event.startDate);
-        return d >= from && d <= to;
+        const inPeriod = d >= from && d <= to;
+        console.log(`${event.title}: дата ${event.startDate} - ${inPeriod ? 'в периоде' : 'не в периоде'}`);
+        return inPeriod;
       });
 
-      // Группировка по месяцам для диаграммы
+      console.log('📊 Мероприятий в периоде:', eventsInPeriod.length);
+      console.log('Детали мероприятий в периоде:', eventsInPeriod.map(e => ({ 
+        title: e.title, 
+        participantsCount: e.participantsCount,
+        fansCount: e.fansCount 
+      })));
+
+      let totalParticipantsCount = 0;
+      let totalFansCount = 0;
+      const uniqueParticipants = new Set();
+      const uniqueFans = new Set();
+
+      eventsInPeriod.forEach((event) => {
+        totalParticipantsCount += event.participantsCount || 0;
+        totalFansCount += event.fansCount || 0;
+        
+        (event.participants || []).forEach(p => {
+          if (p.id && p.role === 'participant') uniqueParticipants.add(p.id);
+          if (p.id && p.role === 'fan') uniqueFans.add(p.id);
+        });
+      });
+
+      console.log('Суммы участников:', { totalParticipantsCount, totalFansCount });
+
       const monthData = {};
       eventsInPeriod.forEach((event) => {
         let d;
@@ -106,46 +208,56 @@ const StatisticsPage = () => {
             month: d.toLocaleDateString("ru-RU", { month: "short", year: "numeric" }),
             events: 0,
             participants: 0,
+            fans: 0,
           };
         }
         monthData[key].events += 1;
-        // Пока заглушка 0, потом заменишь на реальных участников
-        monthData[key].participants += 0;
+        monthData[key].participants += event.participantsCount || 0;
+        monthData[key].fans += event.fansCount || 0;
       });
 
       const chartData = Object.entries(monthData)
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([, v]) => v);
 
-      return {
+      const result = {
         totalEvents: eventsInPeriod.length,
-        totalParticipants: 0, // Заглушка
-        totalParticipations: 0, // Заглушка
+        totalParticipants: totalParticipantsCount,
+        totalFans: totalFansCount,
+        totalUniqueParticipants: uniqueParticipants.size,
+        totalUniqueFans: uniqueFans.size,
         allEvents: eventsInPeriod.map((event) => ({
           id: event.id || event.uuid,
           name: event.title,
           date: event.startDate || new Date().toISOString(),
-          participants: 0, // Заглушка
+          participantsCount: event.participantsCount || 0,
+          fansCount: event.fansCount || 0,
+          totalCount: event.totalCount || 0,
         })).sort((a, b) => {
           if (!a.date) return 1;
           if (!b.date) return -1;
           return new Date(a.date) - new Date(b.date);
         }),
-        chartData: chartData.length > 0 ? chartData : [{ month: "—", events: 0, participants: 0 }],
+        chartData: chartData.length > 0 ? chartData : [{ month: "—", events: 0, participants: 0, fans: 0 }],
         ordersCount: localOrders.length,
       };
+
+      console.log('Результат статистики:', result);
+      return result;
     } catch (err) {
       console.error('Ошибка:', err);
       return {
         totalEvents: 0,
         totalParticipants: 0,
-        totalParticipations: 0,
+        totalFans: 0,
+        totalUniqueParticipants: 0,
+        totalUniqueFans: 0,
         allEvents: [],
-        chartData: [{ month: "—", events: 0, participants: 0 }],
+        chartData: [{ month: "—", events: 0, participants: 0, fans: 0 }],
         ordersCount: 0,
       };
     }
-  }, [dateFrom, dateTo, events, localOrders]);
+  }, [dateFrom, dateTo, eventsWithParticipants, localOrders]);
 
   const handleExportPDF = () => {
     const el = reportRef.current;
@@ -179,25 +291,29 @@ const StatisticsPage = () => {
       ["Отчёт за период", periodLabel],
       [""],
       ["Число мероприятий", reportData.totalEvents],
-      ["Участники (общее количество)", reportData.totalParticipations],
-      ["Участники (уникальные)", reportData.totalParticipants],
+      ["Участники (всего регистраций)", reportData.totalParticipants],
+      ["Болельщики (всего регистраций)", reportData.totalFans],
+      ["Участники (уникальные)", reportData.totalUniqueParticipants],
+      ["Болельщики (уникальные)", reportData.totalUniqueFans],
       ["Количество заказов", reportData.ordersCount],
     ];
 
     const eventsRows = [
-      ["№", "Мероприятие", "Дата", "Участников"],
+      ["№", "Мероприятие", "Дата", "Участников", "Болельщиков", "Всего"],
       ...reportData.allEvents.map((e, i) => [
         i + 1,
         e.name,
         e.date ? new Date(e.date).toLocaleDateString("ru-RU") : "Дата не указана",
-        e.participants,
+        e.participantsCount,
+        e.fansCount,
+        e.totalCount,
       ]),
     ];
 
     const chartDataForExport = reportData.chartData.filter((d) => d.month !== "—");
     const monthlyRows = [
-      ["Период", "Мероприятия", "Участники"],
-      ...chartDataForExport.map((d) => [d.month, d.events, d.participants]),
+      ["Период", "Мероприятия", "Участники", "Болельщики"],
+      ...chartDataForExport.map((d) => [d.month, d.events, d.participants, d.fans]),
     ];
 
     const ordersRows = [
@@ -223,18 +339,25 @@ const StatisticsPage = () => {
     XLSX.utils.book_append_sheet(workbook, wsOrders, "Заказы");
 
     wsSummary["!cols"] = [{ wch: 35 }, { wch: 25 }];
-    wsEvents["!cols"] = [{ wch: 6 }, { wch: 40 }, { wch: 14 }, { wch: 12 }];
-    wsMonthly["!cols"] = [{ wch: 20 }, { wch: 14 }, { wch: 14 }];
+    wsEvents["!cols"] = [{ wch: 6 }, { wch: 40 }, { wch: 14 }, { wch: 12 }, { wch: 12 }, { wch: 10 }];
+    wsMonthly["!cols"] = [{ wch: 20 }, { wch: 14 }, { wch: 14 }, { wch: 14 }];
     wsOrders["!cols"] = [{ wch: 6 }, { wch: 30 }, { wch: 12 }, { wch: 40 }, { wch: 18 }];
 
     XLSX.writeFile(workbook, `Отчёт_${dateFrom}_${dateTo}.xlsx`);
   };
 
+  if (eventsLoading || loadingParticipants) {
+    return (
+      <section className="statisticsPage">
+        <h1 className="statisticsTitle">Статистика</h1>
+        <p className="loadingText">Загрузка данных...</p>
+      </section>
+    );
+  }
+
   return (
     <section className="statisticsPage">
       <h1 className="statisticsTitle">Статистика</h1>
-
-      {eventsLoading && <p className="loadingText">Загрузка данных...</p>}
 
       <div className="statisticsInfoContainer">
         <div ref={reportRef} className="statisticsReportContent">
@@ -268,20 +391,24 @@ const StatisticsPage = () => {
                 </label>
                 <button 
                   onClick={() => {
-                    if (events.length > 0) {
-                      const dates = events.map(e => e.startDate ? new Date(e.startDate) : new Date());
-                      const minDate = new Date(Math.min(...dates));
-                      const maxDate = new Date(Math.max(...dates));
-                      setDateFrom(minDate.toISOString().slice(0, 10));
-                      setDateTo(maxDate.toISOString().slice(0, 10));
-                      saveDateRange(minDate.toISOString().slice(0, 10), maxDate.toISOString().slice(0, 10));
-                    } else {
-                      setDateFrom("2020-01-01");
-                      setDateTo("2030-12-31");
-                      saveDateRange("2020-01-01", "2030-12-31");
+                    if (eventsWithParticipants.length > 0) {
+                      const validDates = eventsWithParticipants
+                        .filter(e => e.startDate)
+                        .map(e => new Date(e.startDate));
+                      if (validDates.length > 0) {
+                        const minDate = new Date(Math.min(...validDates));
+                        const maxDate = new Date(Math.max(...validDates));
+                        setDateFrom(minDate.toISOString().slice(0, 10));
+                        setDateTo(maxDate.toISOString().slice(0, 10));
+                        saveDateRange(minDate.toISOString().slice(0, 10), maxDate.toISOString().slice(0, 10));
+                        return;
+                      }
                     }
+                    setDateFrom("2020-01-01");
+                    setDateTo("2030-12-31");
+                    saveDateRange("2020-01-01", "2030-12-31");
                   }}
-                  style={{marginLeft: '10px', padding: '5px 10px', background: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer'}}
+                  className="showAllBtn"
                 >
                   Показать всё
                 </button>
@@ -298,14 +425,26 @@ const StatisticsPage = () => {
 
             <div className="statCard">
               <h3 className="statCardTitle">Участники</h3>
-              <p className="statCardValue">{reportData.totalParticipations}</p>
-              <p className="statCardDescription">Всего</p>
+              <p className="statCardValue">{reportData.totalParticipants}</p>
+              <p className="statCardDescription">Всего регистраций</p>
             </div>
 
             <div className="statCard">
-              <h3 className="statCardTitle">Участники</h3>
-              <p className="statCardValue">{reportData.totalParticipants}</p>
-              <p className="statCardDescription">Уникальные</p>
+              <h3 className="statCardTitle">Болельщики</h3>
+              <p className="statCardValue">{reportData.totalFans}</p>
+              <p className="statCardDescription">Всего регистраций</p>
+            </div>
+
+            <div className="statCard">
+              <h3 className="statCardTitle">Уникальные</h3>
+              <p className="statCardValue">{reportData.totalUniqueParticipants}</p>
+              <p className="statCardDescription">Участников</p>
+            </div>
+
+            <div className="statCard">
+              <h3 className="statCardTitle">Уникальные</h3>
+              <p className="statCardValue">{reportData.totalUniqueFans}</p>
+              <p className="statCardDescription">Болельщиков</p>
             </div>
 
             <div className="statCard">
@@ -316,7 +455,7 @@ const StatisticsPage = () => {
           </div>
 
           <div className="chartContainer" data-pdf-exclude>
-            <h3 className="chartTitle chartTitle--centered">Диаграмма мероприятий и участников по месяцам</h3>
+            <h3 className="chartTitle chartTitle--centered">Диаграмма по месяцам</h3>
             <div className="chartWrapper">
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={reportData.chartData}>
@@ -325,8 +464,9 @@ const StatisticsPage = () => {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="events" fill="var(--blueColor)" name="Мероприятия" />
-                  <Bar dataKey="participants" fill="#94a3b8" name="Участники" />
+                  <Bar dataKey="events" fill="#3b82f6" name="Мероприятия" />
+                  <Bar dataKey="participants" fill="#10b981" name="Участники" />
+                  <Bar dataKey="fans" fill="#94a3b8" name="Болельщики" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -343,16 +483,20 @@ const StatisticsPage = () => {
                     <th>Мероприятие</th>
                     <th>Дата</th>
                     <th>Участников</th>
+                    <th>Болельщиков</th>
+                    <th>Всего</th>
                   </tr>
                 </thead>
                 <tbody>
                   {reportData.allEvents.map((event) => (
                     <tr key={event.id}>
-                      <td>{event.name}</td>
-                      <td>
-                        {new Date(event.date).toLocaleDateString("ru-RU")}
+                      <td style={{ padding: "12px" }}>{event.name}</td>
+                      <td style={{ padding: "12px" }}>
+                        {event.date ? new Date(event.date).toLocaleDateString("ru-RU") : "Дата не указана"}
                       </td>
-                      <td>{event.participants}</td>
+                      <td style={{ padding: "12px", textAlign: "center" }}>{event.participantsCount}</td>
+                      <td style={{ padding: "12px", textAlign: "center" }}>{event.fansCount}</td>
+                      <td style={{ padding: "12px", textAlign: "center" }}>{event.totalCount}</td>
                     </tr>
                   ))}
                 </tbody>

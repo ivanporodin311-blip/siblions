@@ -115,7 +115,10 @@
   font-size: 16px;
   color: #64748b;
   margin: 0;
-  padding: 20px 0;
+  padding: 40px;
+  text-align: center;
+  background: #f8fafc;
+  border-radius: 12px;
 }
 
 .loadingText {
@@ -132,7 +135,6 @@
 .chartWrapper {
   min-height: 300px;
 }
-
 
 /* Сетка статистики */
 .statisticsGrid {
@@ -225,58 +227,112 @@
 .statisticsTableContainer {
   overflow-x: auto;
   margin-bottom: 40px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
 }
 
 .statisticsTable {
   width: 100%;
   border-collapse: collapse;
   font-family: "Kontora", sans-serif;
-  min-width: 600px;
-  table-layout: fixed;
+  min-width: 700px;
 }
 
 .statisticsTable th,
 .statisticsTable td {
-  padding: 15px 20px;
+  padding: 16px 20px;
 }
 
+/* Ширина колонок */
 .statisticsTable th:first-child,
 .statisticsTable td:first-child {
-  width: 55%;
+  width: 40%;
+  text-align: left;
 }
 
 .statisticsTable th:nth-child(2),
 .statisticsTable td:nth-child(2) {
-  width: 30%;
+  width: 20%;
+  text-align: left;
 }
 
 .statisticsTable th:nth-child(3),
 .statisticsTable td:nth-child(3) {
-  width: 15%;
+  width: 13%;
+  text-align: center;
+}
+
+.statisticsTable th:nth-child(4),
+.statisticsTable td:nth-child(4) {
+  width: 13%;
+  text-align: center;
+}
+
+.statisticsTable th:nth-child(5),
+.statisticsTable td:nth-child(5) {
+  width: 14%;
   text-align: center;
 }
 
 .statisticsTable th {
   background: #f1f5f9;
-  text-align: left;
   font-weight: 600;
   font-size: 16px;
   color: #003466;
   border-bottom: 2px solid #e2e8f0;
 }
 
-.statisticsTable th:nth-child(3) {
-  text-align: center;
-}
-
 .statisticsTable td {
   font-size: 15px;
-  color: #333333;
+  color: #334155;
   border-bottom: 1px solid #f1f5f9;
 }
 
 .statisticsTable tbody tr:hover {
   background-color: #f8fafc;
+  transition: background-color 0.2s;
+}
+
+.statisticsTable tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Бейджи для участников */
+.participants-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.fans-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fce7f3;
+  color: #be185d;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.total-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #dcfce7;
+  color: #15803d;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 /* Кнопки экспорта */
@@ -388,6 +444,11 @@
     width: 100%;
     justify-content: center;
   }
+
+  .statisticsTable th,
+  .statisticsTable td {
+    padding: 12px 15px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -426,5 +487,11 @@
 
   .chartPlaceholderText {
     font-size: 16px;
+  }
+
+  .statisticsTable th,
+  .statisticsTable td {
+    padding: 10px 12px;
+    font-size: 13px;
   }
 }

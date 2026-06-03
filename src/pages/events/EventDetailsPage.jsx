@@ -1,21 +1,39 @@
-// src/pages/events/EventDetailsPage.jsx (ПОЛНОСТЬЮ ИСПРАВЛЕННАЯ ВЕРСИЯ)
-import React, { useState, useEffect } from 'react';
+// src/pages/events/EventDetailsPage.jsx
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import * as XLSX from "xlsx";
 import useEventStore from '../../stores/eventStore';
+import EventParticipantsTable from "./EventCard/EventParticipantsTable";
 import './eventDetails.css';
 
 const EventDetailsPage = () => {
-  const { eventId } = useParams(); // Получаем UUID из URL
+  const { eventId } = useParams();
   const navigate = useNavigate();
   
-  // Состояния
+  // Состояния для редактирования и регистрации
   const [isEditing, setIsEditing] = useState(false);
   const [registrationType, setRegistrationType] = useState('participant');
   const [isRegistered, setIsRegistered] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   
-  const { selectedEvent, loading, error, fetchEventById, updateEvent, deleteEvent } = useEventStore();
+  // Состояния для участников
+  const [participants, setParticipants] = useState([]);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [loadingParticipants, setLoadingParticipants] = useState(false);
+
+  const { 
+    selectedEvent, 
+    loading, 
+    error, 
+    fetchEventById, 
+    updateEvent, 
+    deleteEvent,
+    fetchEventParticipants,
+    awardPointsToParticipants
+  } = useEventStore();
+  
   const event = selectedEvent;
 
   // Форма редактирования
@@ -34,15 +52,50 @@ const EventDetailsPage = () => {
     organizerId: null
   });
 
-  // ✅ Проверяем, что eventId существует и не undefined
+  // Загружаем мероприятие
   useEffect(() => {
     if (eventId && eventId !== 'undefined' && eventId !== 'NaN') {
       console.log('📡 Загружаем мероприятие с UUID:', eventId);
       fetchEventById(eventId);
-    } else {
-      console.error('❌ eventId невалиден:', eventId);
     }
   }, [eventId, fetchEventById]);
+
+  // Загружаем участников мероприятия
+  useEffect(() => {
+    const loadParticipants = async () => {
+      if (!eventId || eventId === 'undefined') return;
+      
+      setLoadingParticipants(true);
+      try {
+        const response = await fetchEventParticipants(eventId);
+        if (response?.success && response.persons) {
+          const formattedParticipants = response.persons.map(person => ({
+            id: person.id,
+            name: `${person.firstName || ''} ${person.lastName || ''}`.trim() || person.username,
+            username: person.username,
+            email: person.email,
+            group: person.group || "",
+            school: person.school || "",
+            points: 0,
+            totalPoints: person.totalPoints || 0,
+            registrationId: person.registrationId,
+            role: person.role,
+            attended: person.attended || false
+          }));
+          setParticipants(formattedParticipants);
+        } else {
+          setParticipants([]);
+        }
+      } catch (error) {
+        console.error("Ошибка загрузки участников:", error);
+        showToastMessage("Ошибка загрузки участников");
+      } finally {
+        setLoadingParticipants(false);
+      }
+    };
+
+    loadParticipants();
+  }, [eventId, fetchEventParticipants]);
 
   // Заполняем форму при загрузке события
   useEffect(() => {
@@ -64,6 +117,12 @@ const EventDetailsPage = () => {
     }
   }, [event, isEditing]);
 
+  const showToastMessage = (message) => {
+    setToastMessage(message);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
+
   const handleInputChange = (e) => {
     const { name, value, type } = e.target;
     setFormData(prev => ({
@@ -73,10 +132,7 @@ const EventDetailsPage = () => {
   };
 
   const handleSave = async () => {
-    if (!eventId || eventId === 'undefined') {
-      console.error('❌ Нельзя сохранить: eventId невалиден');
-      return;
-    }
+    if (!eventId) return;
     const result = await updateEvent(eventId, formData);
     if (result) {
       setSaveSuccess(true);
@@ -86,10 +142,7 @@ const EventDetailsPage = () => {
   };
 
   const handleDelete = async () => {
-    if (!eventId || eventId === 'undefined') {
-      console.error('❌ Нельзя удалить: eventId невалиден');
-      return;
-    }
+    if (!eventId) return;
     if (window.confirm('Вы уверены, что хотите удалить это мероприятие?')) {
       const result = await deleteEvent(eventId);
       if (result) {
@@ -116,6 +169,12 @@ const EventDetailsPage = () => {
         organizerId: event.organizerId || null
       });
     }
+  };
+
+  // Редактирование участника
+  const handleEditParticipant = async (participantId, editData) => {
+    console.log('Редактирование участника:', participantId, editData);
+    showToastMessage('Редактирование участников пока недоступно через API');
   };
 
   const formatDate = (dateString) => {
@@ -155,18 +214,135 @@ const EventDetailsPage = () => {
       'active': 'Активно',
       'completed': 'Завершено',
       'cancelled': 'Отменено',
-      'draft': 'Черновик'
+      'draft': 'Черновик',
+      'published': 'Опубликовано'
     };
     return statuses[status] || status || 'Не указан';
   };
 
-  const handleRegister = () => {
-    setRegistrationSuccess(true);
-    setIsRegistered(true);
-    setTimeout(() => setRegistrationSuccess(false), 3000);
+  const participantTotals = useMemo(() => {
+    const totals = {};
+    participants.forEach((p) => {
+      totals[p.id] = p.totalPoints || 0;
+    });
+    return totals;
+  }, [participants]);
+
+  const handleExportExcel = () => {
+    const rows = participants.map((p, i) => ({
+      "№": i + 1,
+      "ФИО": p.name,
+      "Username": p.username,
+      "Email": p.email,
+      "Группа": p.group,
+      "Школа": p.school,
+      "Баллы за мероприятие": p.points || 0,
+      "Общие баллы": participantTotals[p.id] ?? 0,
+      "Роль": p.role === "participant" ? "Участник" : "Болельщик",
+      "Отметка о посещении": p.attended ? "✓" : "—"
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Участники");
+
+    const colWidths = Object.keys(rows[0] || {}).map((key) => ({
+      wch: Math.max(key.length, ...rows.map((r) => String(r[key]).length)) + 2,
+    }));
+    worksheet["!cols"] = colWidths;
+
+    XLSX.writeFile(workbook, `Участники — ${event?.title || 'Мероприятие'}.xlsx`);
   };
 
-  // ✅ Проверка на валидность eventId
+  const handlePointsChange = (participantId, points) => {
+    setParticipants((prev) =>
+      prev.map((p) =>
+        p.id === participantId ? { ...p, points: parseInt(points) || 0 } : p
+      )
+    );
+  };
+
+  const handleSaveResults = async () => {
+    if (!eventId) {
+      showToastMessage("ID мероприятия не найден");
+      return;
+    }
+
+    const participantsWithPoints = participants.filter(p => p.points > 0);
+    
+    if (participantsWithPoints.length === 0) {
+      showToastMessage("Нет участников для начисления баллов");
+      return;
+    }
+
+    setLoadingParticipants(true);
+    try {
+      const userIds = participantsWithPoints.map(p => p.id);
+      const result = await awardPointsToParticipants(eventId, userIds);
+      
+      if (result?.success) {
+        setParticipants(prev =>
+          prev.map(p => {
+            const awarded = result.results?.find(r => r.userId === p.id);
+            if (awarded) {
+              return { ...p, totalPoints: (p.totalPoints || 0) + p.points, points: 0 };
+            }
+            return p;
+          })
+        );
+        showToastMessage(`Баллы успешно начислены! ${result.results?.length || userIds.length} участников получили баллы`);
+      } else {
+        throw new Error(result?.message || "Ошибка при начислении баллов");
+      }
+    } catch (error) {
+      console.error("Ошибка сохранения результатов:", error);
+      showToastMessage(error.message || "Ошибка при сохранении результатов");
+    } finally {
+      setLoadingParticipants(false);
+    }
+  };
+
+  const handleRegister = async () => {
+    try {
+      const response = await fetch(`https://songeng.voold.online/api/events/${eventId}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ registrationType })
+      });
+
+      if (!response.ok) {
+        throw new Error("Ошибка регистрации");
+      }
+
+      setRegistrationSuccess(true);
+      setIsRegistered(true);
+      setTimeout(() => setRegistrationSuccess(false), 3000);
+      
+      // Обновляем список участников
+      const updatedParticipants = await fetchEventParticipants(eventId);
+      if (updatedParticipants?.success && updatedParticipants.persons) {
+        const formatted = updatedParticipants.persons.map(person => ({
+          id: person.id,
+          name: `${person.firstName || ''} ${person.lastName || ''}`.trim() || person.username,
+          username: person.username,
+          email: person.email,
+          group: person.group || "",
+          school: person.school || "",
+          points: 0,
+          totalPoints: person.totalPoints || 0,
+          registrationId: person.registrationId,
+          role: person.role,
+          attended: person.attended || false
+        }));
+        setParticipants(formatted);
+      }
+    } catch (error) {
+      console.error("Ошибка регистрации:", error);
+      showToastMessage("Ошибка при регистрации");
+    }
+  };
+
   if (!eventId || eventId === 'undefined' || eventId === 'NaN') {
     return (
       <div className="event-detail not-found">
@@ -201,13 +377,13 @@ const EventDetailsPage = () => {
 
   return (
     <div className="event-detail">
-      {/* Кнопки навигации */}
+      {showToast && (
+        <div className="event-toast">{toastMessage}</div>
+      )}
+
       <div className="detail-nav-buttons">
         <button onClick={() => navigate('/events')} className="back-btn">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-          </svg>
-          Назад к мероприятиям
+          ← Назад к мероприятиям
         </button>
         
         <div className="admin-actions">
@@ -234,9 +410,7 @@ const EventDetailsPage = () => {
       </div>
 
       {saveSuccess && (
-        <div className="success-message-global">
-          ✅ Изменения успешно сохранены!
-        </div>
+        <div className="success-message-global">✅ Изменения успешно сохранены!</div>
       )}
 
       <div className="event-detail-container">
@@ -250,7 +424,6 @@ const EventDetailsPage = () => {
               value={formData.title}
               onChange={handleInputChange}
               className="edit-input edit-title"
-              placeholder="Название мероприятия"
             />
           )}
           <div className={`event-status-badge ${event.status}`}>
@@ -259,79 +432,24 @@ const EventDetailsPage = () => {
         </div>
 
         <div className="event-detail-content">
-          {/* Левая колонка */}
           <div className="event-info">
             <div className="event-date-location">
               <div className="date-time">
-                <svg className="icon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM5 6v2h14V6H5z"/>
-                </svg>
+                📅
                 <div>
-                  {!isEditing ? (
-                    <>
-                      <div className="date">{formatDate(event.startDate)}</div>
-                      <div className="time">
-                        {formatTime(event.startDate)} 
-                        {event.endDate && ` — ${formatTime(event.endDate)}`}
-                      </div>
-                    </>
-                  ) : (
-                    <div className="edit-date-group">
-                      <input
-                        type="datetime-local"
-                        name="startDate"
-                        value={formData.startDate}
-                        onChange={handleInputChange}
-                        className="edit-input"
-                      />
-                      <input
-                        type="datetime-local"
-                        name="endDate"
-                        value={formData.endDate}
-                        onChange={handleInputChange}
-                        className="edit-input"
-                        placeholder="Дата окончания"
-                      />
-                    </div>
-                  )}
+                  <div className="date">{formatDate(event.startDate)}</div>
+                  <div className="time">{formatTime(event.startDate)}</div>
                 </div>
               </div>
-              
               <div className="location">
-                <svg className="icon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                </svg>
-                <div>
-                  {!isEditing ? (
-                    <div className="address">{event.location}</div>
-                  ) : (
-                    <input
-                      type="text"
-                      name="location"
-                      value={formData.location}
-                      onChange={handleInputChange}
-                      className="edit-input"
-                      placeholder="Место проведения"
-                    />
-                  )}
-                </div>
+                📍
+                <div>{event.location || "Место не указано"}</div>
               </div>
             </div>
 
             <div className="event-full-description">
-              <h3>Описание мероприятия</h3>
-              {!isEditing ? (
-                <p>{event.description || "Описание отсутствует"}</p>
-              ) : (
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  className="edit-textarea"
-                  rows="5"
-                  placeholder="Описание мероприятия"
-                />
-              )}
+              <h3>Описание</h3>
+              <p>{event.description || "Описание отсутствует"}</p>
             </div>
 
             <div className="event-details">
@@ -339,162 +457,62 @@ const EventDetailsPage = () => {
               <div className="details-grid">
                 <div className="detail-item">
                   <span className="detail-label">Тип события:</span>
-                  {!isEditing ? (
-                    <span className="detail-value">{formatEventType(event.eventType)}</span>
-                  ) : (
-                    <select
-                      name="eventType"
-                      value={formData.eventType}
-                      onChange={handleInputChange}
-                      className="edit-select"
-                    >
-                      <option value="">Выберите тип</option>
-                      <option value="sport">Спортивное</option>
-                      <option value="educational">Образовательное</option>
-                      <option value="cultural">Культурное</option>
-                      <option value="social">Социальное</option>
-                      <option value="science">Научное</option>
-                      <option value="other">Другое</option>
-                    </select>
-                  )}
+                  <span className="detail-value">{formatEventType(event.eventType)}</span>
                 </div>
-                
                 <div className="detail-item">
                   <span className="detail-label">Статус:</span>
-                  {!isEditing ? (
-                    <span className="detail-value">{formatStatus(event.status)}</span>
-                  ) : (
-                    <select
-                      name="status"
-                      value={formData.status}
-                      onChange={handleInputChange}
-                      className="edit-select"
-                    >
-                      <option value="active">Активно</option>
-                      <option value="completed">Завершено</option>
-                      <option value="cancelled">Отменено</option>
-                      <option value="draft">Черновик</option>
-                    </select>
-                  )}
+                  <span className="detail-value">{formatStatus(event.status)}</span>
                 </div>
-                
                 <div className="detail-item">
                   <span className="detail-label">Баллы участнику:</span>
-                  {!isEditing ? (
-                    <span className="detail-value">{event.participantPoints || 0} баллов</span>
-                  ) : (
-                    <input
-                      type="number"
-                      name="participantPoints"
-                      value={formData.participantPoints}
-                      onChange={handleInputChange}
-                      className="edit-input-small"
-                      min="0"
-                    />
-                  )}
+                  <span className="detail-value">{event.participantPoints || 0} баллов</span>
                 </div>
-                
                 <div className="detail-item">
                   <span className="detail-label">Баллы болельщику:</span>
-                  {!isEditing ? (
-                    <span className="detail-value">{event.fanPoints || 0} баллов</span>
-                  ) : (
-                    <input
-                      type="number"
-                      name="fanPoints"
-                      value={formData.fanPoints}
-                      onChange={handleInputChange}
-                      className="edit-input-small"
-                      min="0"
-                    />
-                  )}
+                  <span className="detail-value">{event.fanPoints || 0} баллов</span>
                 </div>
-                
                 <div className="detail-item">
                   <span className="detail-label">Макс. участников:</span>
-                  {!isEditing ? (
-                    <span className="detail-value">{event.maxParticipants || 'Не ограничено'}</span>
-                  ) : (
-                    <input
-                      type="number"
-                      name="maxParticipants"
-                      value={formData.maxParticipants}
-                      onChange={handleInputChange}
-                      className="edit-input-small"
-                      min="0"
-                    />
-                  )}
+                  <span className="detail-value">{event.maxParticipants || 'Не ограничено'}</span>
                 </div>
-                
                 <div className="detail-item">
                   <span className="detail-label">Дедлайн регистрации:</span>
-                  {!isEditing ? (
-                    <span className="detail-value">
-                      {event.registrationDeadline ? formatDate(event.registrationDeadline) : 'Не указан'}
-                    </span>
-                  ) : (
-                    <input
-                      type="datetime-local"
-                      name="registrationDeadline"
-                      value={formData.registrationDeadline}
-                      onChange={handleInputChange}
-                      className="edit-input"
-                    />
-                  )}
-                </div>
-                
-                <div className="detail-item">
-                  <span className="detail-label">ID мероприятия:</span>
-                  <span className="detail-value">#{event.uuid || event.id || eventId}</span>
-                </div>
-                
-                <div className="detail-item">
-                  <span className="detail-label">ID организатора:</span>
-                  {!isEditing ? (
-                    <span className="detail-value">{event.organizerId || 'Не указан'}</span>
-                  ) : (
-                    <input
-                      type="number"
-                      name="organizerId"
-                      value={formData.organizerId || ''}
-                      onChange={handleInputChange}
-                      className="edit-input-small"
-                      placeholder="ID организатора"
-                    />
-                  )}
+                  <span className="detail-value">
+                    {event.registrationDeadline ? formatDate(event.registrationDeadline) : 'Не указан'}
+                  </span>
                 </div>
               </div>
             </div>
 
-            {event.createdAt && (
-              <div className="event-meta">
-                <h3>Информация о публикации</h3>
-                <div className="meta-grid">
-                  <div className="meta-item">
-                    <span className="meta-label">Создано:</span>
-                    <span className="meta-value">{formatDate(event.createdAt)}</span>
-                  </div>
-                  <div className="meta-item">
-                    <span className="meta-label">Обновлено:</span>
-                    <span className="meta-value">{formatDate(event.updatedAt)}</span>
-                  </div>
+            <div className="event-participants-section">
+              <div className="participants-header">
+                <h3>Участники мероприятия</h3>
+                <div className="participants-actions">
+                  <button className="export-btn" onClick={handleExportExcel} disabled={participants.length === 0}>
+                    📊 Excel
+                  </button>
+                  <button className="save-results-btn" onClick={handleSaveResults} disabled={loadingParticipants}>
+                    💾 Сохранить результаты
+                  </button>
                 </div>
               </div>
-            )}
+
+              <EventParticipantsTable
+                participants={participants}
+                onPointsChange={handlePointsChange}
+                participantTotals={participantTotals}
+                onEditParticipant={handleEditParticipant}
+              />
+            </div>
           </div>
 
-          {/* Правая колонка */}
+          {/* Правая колонка - регистрация */}
           <div className="event-registration">
             <div className="registration-card">
               <h3>Регистрация</h3>
-              
               {isRegistered ? (
                 <div className="registration-success">
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="#28a745">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                  </svg>
-                  <h4>Вы успешно зарегистрированы!</h4>
-                  <p>Мы отправили подтверждение на вашу почту.</p>
+                  <h4>✅ Вы успешно зарегистрированы!</h4>
                 </div>
               ) : (
                 <>
@@ -504,23 +522,15 @@ const EventDetailsPage = () => {
                         className={`type-btn ${registrationType === 'participant' ? 'active' : ''}`}
                         onClick={() => setRegistrationType('participant')}
                       >
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                        </svg>
-                        <span>Участник</span>
+                        👤 Участник
                       </button>
-                      
                       <button
-                        className={`type-btn ${registrationType === 'spectator' ? 'active' : ''}`}
-                        onClick={() => setRegistrationType('spectator')}
+                        className={`type-btn ${registrationType === 'fan' ? 'active' : ''}`}
+                        onClick={() => setRegistrationType('fan')}
                       >
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M18 13v7H4V6h5.02c.05-.71.22-1.38.48-2H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-5l-2-2zM16 21H6v-1h10v1zm3.5-8.5L21 13l-7 7-4.5-4.5L10 14l3 3 5.5-5.5z"/>
-                        </svg>
-                        <span>Болельщик</span>
+                        👥 Болельщик
                       </button>
                     </div>
-                    
                     <div className="type-info">
                       {registrationType === 'participant' ? (
                         <>
@@ -528,8 +538,6 @@ const EventDetailsPage = () => {
                           <ul>
                             <li>Активное участие в мероприятии</li>
                             <li>Получение {event.participantPoints || 0} баллов</li>
-                            <li>Командное взаимодействие</li>
-                            <li>Следуйте правилам мероприятия</li>
                           </ul>
                         </>
                       ) : (
@@ -537,32 +545,16 @@ const EventDetailsPage = () => {
                           <h4>Наблюдение за мероприятием</h4>
                           <ul>
                             <li>Посещение в качестве зрителя</li>
-                            <li>Поддержка участников</li>
                             <li>Получение {event.fanPoints || 0} баллов</li>
-                            <li>Бесплатное посещение</li>
                           </ul>
                         </>
                       )}
                     </div>
                   </div>
-                    
-                  <button
-                    className="register-btn"
-                    onClick={handleRegister}
-                    disabled={event.status !== 'active'}
-                  >
-                    {event.status !== 'active' 
-                      ? 'Регистрация закрыта'
-                      : registrationType === 'participant' 
-                        ? 'Записаться как участник'
-                        : 'Записаться как болельщик'}
+                  <button className="register-btn" onClick={handleRegister}>
+                    Записаться как {registrationType === 'participant' ? 'участник' : 'болельщик'}
                   </button>
-
-                  {registrationSuccess && (
-                    <div className="success-message">
-                      Регистрация прошла успешно!
-                    </div>
-                  )}
+                  {registrationSuccess && <div className="success-message">✅ Регистрация успешна!</div>}
                 </>
               )}
             </div>

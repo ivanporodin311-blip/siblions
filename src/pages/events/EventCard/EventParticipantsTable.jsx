@@ -7,18 +7,11 @@ const EditIcon = () => (
   </svg>
 );
 
-const DeleteIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
 const EventParticipantsTable = ({
   participants,
   onPointsChange,
   participantTotals,
   onEditParticipant,
-  onDeleteParticipant,
 }) => {
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({ name: "", group: "", school: "" });
@@ -61,7 +54,6 @@ const EventParticipantsTable = ({
           <div className="tableCell school">Школа</div>
           <div className="tableCell points">Баллы</div>
           <div className="tableCell total">Общие баллы</div>
-          <div className="tableCell delete"></div>
         </div>
       </div>
 
@@ -130,17 +122,6 @@ const EventParticipantsTable = ({
                 <div className="tableCell total">
                   {participantTotals?.[participant.id] ?? 0}
                 </div>
-                <div className="tableCell delete">
-                  <button
-                    type="button"
-                    className="tableActionBtn tableActionBtn--delete"
-                    onClick={() => onDeleteParticipant?.(participant)}
-                    aria-label="Удалить участника"
-                    title="Удалить"
-                  >
-                    <DeleteIcon />
-                  </button>
-                </div>
               </>
             ) : (
               <>
@@ -163,17 +144,6 @@ const EventParticipantsTable = ({
                 </div>
                 <div className="tableCell total">
                   {participantTotals?.[participant.id] ?? 0}
-                </div>
-                <div className="tableCell delete">
-                  <button
-                    type="button"
-                    className="tableActionBtn tableActionBtn--delete"
-                    onClick={() => onDeleteParticipant?.(participant)}
-                    aria-label="Удалить участника"
-                    title="Удалить"
-                  >
-                    <DeleteIcon />
-                  </button>
                 </div>
               </>
             )}
