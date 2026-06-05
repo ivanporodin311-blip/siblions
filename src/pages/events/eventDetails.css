@@ -1,531 +1,861 @@
-/* eventDetails.css */
+@import url("/src/assets/fonts/fonts.css");
+@import url("/src/assets/colors/colors.css");
 
-/* Основные стили страницы */
-.event-detail {
-  max-width: 1200px;
+.eventDetailsPage {
+  padding: 20px;
+  max-width: 1308px;
   margin: 0 auto;
-  padding: 24px;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-.loader {
-  text-align: center;
-  padding: 40px;
-  font-size: 18px;
-  color: #666;
-}
-
-/* Админские кнопки */
-.detail-nav-buttons {
+.eventDetailsHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 40px;
   flex-wrap: wrap;
-  gap: 16px;
-}
-
-.back-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  background: #6c757d;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.back-btn:hover {
-  background: #5a6268;
-}
-
-.admin-actions {
-  display: flex;
-  gap: 12px;
-}
-
-.edit-btn, .delete-btn, .save-btn, .cancel-btn {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.edit-btn {
-  background: #003466;
-  color: white;
-}
-
-.edit-btn:hover {
-  background: #004a8f;
-}
-
-.delete-btn {
-  background: #dc3545;
-  color: white;
-}
-
-.delete-btn:hover {
-  background: #c82333;
-}
-
-.save-btn {
-  background: #28a745;
-  color: white;
-}
-
-.save-btn:hover {
-  background: #218838;
-}
-
-.cancel-btn {
-  background: #6c757d;
-  color: white;
-}
-
-.cancel-btn:hover {
-  background: #5a6268;
-}
-
-/* Поля редактирования */
-.edit-input, .edit-textarea, .edit-select {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 14px;
-  font-family: inherit;
-}
-
-.edit-title {
-  font-size: 32px;
-  font-weight: 700;
-  font-family: "Kontora", sans-serif;
-}
-
-.edit-textarea {
-  resize: vertical;
-}
-
-.edit-input-small {
-  width: 100px;
-  padding: 6px 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-.edit-date-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.success-message-global {
-  background: #d4edda;
-  color: #155724;
-  padding: 12px 20px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  text-align: center;
-  animation: fadeOut 3s ease-in-out;
-}
-
-@keyframes fadeOut {
-  0% { opacity: 1; }
-  70% { opacity: 1; }
-  100% { opacity: 0; }
-}
-
-/* Стили для карточки мероприятия */
-.event-detail-container {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-}
-
-.event-detail-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 24px 32px;
-  background: linear-gradient(135deg, #003466 0%, #004a8f 100%);
-  color: white;
+  gap: 20px;
 }
 
 .event-detail-title {
-  font-size: 28px;
+  font-family: "Kontora", sans-serif;
   font-weight: 700;
+  font-size: 55px;
+  color: rgba(0, 52, 102, 1);
   margin: 0;
+  line-height: 1.2;
+}
+
+.eventDetailsActions {
+  display: flex;
+  gap: 20px;
+  margin-top: 30px;
+  justify-content: flex-end;
+}
+
+/* Для страницы деталей - убираем курсор-указатель */
+.eventCard--details {
+  cursor: default;
+}
+
+.eventCard--details:hover {
+  cursor: default;
+  box-shadow: 0px 0px 6px 2px rgba(0, 52, 102, 0.42);
+  border-color: #eaeaea;
+}
+
+.eventCard--details:hover .ag-courses-item_bg {
+  transform: none;
+}
+
+.eventCard--details:hover .eventCard__title,
+.eventCard--details:hover .eventCard__location,
+.eventCard--details:hover .eventCard__date,
+.eventCard--details:hover .eventCard__time,
+.eventCard--details:hover .eventCard__separator {
+  color: inherit;
+}
+
+.editEventButton,
+.deleteEventButton,
+.backToEventsButton {
+  font-family: "Kontora", sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  padding: 12px 24px;
+  border-radius: 12px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.editEventButton {
+  background-color: var(--blueColor);
+  color: white;
+}
+
+.editEventButton:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.deleteEventButton {
+  background-color: #f44336;
+  color: white;
+}
+
+.deleteEventButton:hover {
+  background-color: #da190b;
+  transform: translateY(-1px);
+}
+
+.backToEventsButton {
+  background-color: var(--blueColor);
+  color: white;
+  margin-top: 20px;
+  display: inline-block;
+}
+
+.backToEventsButton:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.eventDetailsContent {
+  background: white;
+  border: 1px solid #d5e2f1;
+  border-radius: 25px;
+  overflow: hidden;
+}
+
+.eventDetailsCard {
+  padding: 40px;
+  width: auto;
+  
+}
+
+.eventDetailsSection {
+  margin-bottom: 40px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid #d5e2f1;
+}
+
+.eventDetailsSection:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.eventDetailsSection h3 {
+  font-family: "Cantora One", sans-serif;
+  font-weight: 700;
+  font-size: 25px;
+  color: #003466;
+  margin: 0 0 25px 0;
+}
+
+.eventDetailsRow {
+  display: flex;
+  margin-bottom: 20px;
+  font-family: "Cantora One", sans-serif;
+  font-size: 25px;
+}
+
+.eventDetailsLabel {
+  width: 250px;
+  font-weight: 600;
+  color: #003466;
+  flex-shrink: 0;
+}
+
+.eventDetailsValue {
+  flex: 1;
+  color: #333;
+}
+
+.eventDetailsDescription {
+  color: #333;
+  background-color: #f8fbff;
+  padding: 20px;
+  border-radius: 14px;
+  font-family: "Cantora One", sans-serif;
+  font-size: 25px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.eventStatus {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 20px;
   font-family: "Kontora", sans-serif;
 }
 
-.event-status-badge {
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 500;
-  background: rgba(255, 255, 255, 0.2);
+.eventStatus.future {
+  background-color: #e3f2fd;
+  color: #1976d2;
 }
 
-.event-status-badge.active, .event-status-badge.published {
-  background: #28a745;
+.eventStatus.past {
+  background-color: #f5f5f5;
+  color: #757575;
 }
 
-.event-status-badge.completed {
-  background: #6c757d;
+.loadingContainer,
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
 }
 
-.event-status-badge.cancelled {
-  background: #dc3545;
+.errorMessage {
+  font-family: "Kontora", sans-serif;
+  font-size: 25px;
+  color: #f44336;
+  margin: 20px 0;
 }
 
-.event-status-badge.draft {
-  background: #ffc107;
-  color: #333;
-}
-
-/* Контент */
-.event-detail-content {
-  display: grid;
-
-  gap: 32px;
-  padding: 32px;
-}
-
-@media (max-width: 768px) {
-  .event-detail-content {
-    grid-template-columns: 1fr;
+/* Адаптивность */
+@media (max-width: 1300px) {
+  .eventDetailsCard {
+    padding: 30px 20px;
+  }
+  
+  .eventDetailsSection h3 {
+    font-size: 22px;
+  }
+  
+  .eventDetailsRow {
+    font-size: 22px;
+  }
+  
+  .eventDetailsLabel {
+    width: 220px;
+  }
+  
+  .eventDetailsDescription {
+    font-size: 22px;
+    padding: 16px;
+  }
+  
+  .eventStatus {
+    font-size: 18px;
   }
 }
 
-.event-info {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+@media (max-width: 992px) {
+  .eventDetailsLabel {
+    width: 200px;
+  }
 }
 
-/* Дата и место */
-.event-date-location {
-  background: #f8f9fa;
-  padding: 20px;
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+@media (max-width: 768px) {
+  .eventDetailsPage {
+    padding: 15px;
+  }
+  
+  .eventDetailsCard {
+    padding: 20px 15px;
+  }
+  
+  .eventDetailsSection {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+  }
+  
+  .eventDetailsSection h3 {
+    font-size: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .eventDetailsRow {
+    flex-direction: column;
+    font-size: 20px;
+    margin-bottom: 15px;
+  }
+  
+  .eventDetailsLabel {
+    width: auto;
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+  
+  .eventDetailsDescription {
+    font-size: 20px;
+    padding: 14px;
+  }
+  
+  .eventStatus {
+    font-size: 16px;
+    padding: 4px 12px;
+  }
+  
+  .eventDetailsActions {
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 20px;
+  }
+  
+  .editEventButton,
+  .deleteEventButton {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .loadingContainer p,
+  .errorMessage {
+    font-size: 20px;
+  }
 }
 
-.date-time, .location {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 16px;
-  color: #333;
+@media (max-width: 480px) {
+  .eventDetailsPage {
+    padding: 10px;
+  }
+  
+  .eventDetailsCard {
+    padding: 16px;
+  }
+  
+  .eventDetailsSection h3 {
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+  
+  .eventDetailsRow {
+    font-size: 18px;
+  }
+  
+  .eventDetailsDescription {
+    font-size: 18px;
+    padding: 12px;
+  }
+  
+  .eventStatus {
+    font-size: 14px;
+  }
+  
+  .editEventButton,
+  .deleteEventButton,
+  .backToEventsButton {
+    font-size: 14px;
+    padding: 10px 20px;
+  }
+  
+  .loadingContainer p,
+  .errorMessage {
+    font-size: 18px;
+  }
 }
 
-.date {
-  font-weight: 600;
-  margin-bottom: 4px;
+/* Анимация */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.time {
-  color: #666;
-  font-size: 14px;
+.eventDetailsContent {
+  animation: fadeIn 0.3s ease-out;
 }
 
-.address {
-  color: #666;
+/* ====== Слайдер статусов ====== */
+.status-slider {
+  width: 100%;
+  padding: 10px 0 0 0;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
-/* Описание */
-.event-full-description h3 {
-  font-size: 18px;
-  margin-bottom: 12px;
-  color: #333;
+.status-slider-track {
+  position: relative;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 3px;
+  cursor: pointer;
+  margin: 0 10px;
 }
 
-.event-full-description p {
-  line-height: 1.6;
-  color: #555;
+.status-slider-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.2s ease, background 0.2s ease;
+  pointer-events: none;
 }
 
-/* Детали */
-.event-details h3 {
-  font-size: 18px;
-  margin-bottom: 16px;
-  color: #333;
+.status-slider-thumb {
+  position: absolute;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  border: 3px solid #ffffff;
+  cursor: grab;
+  transition: left 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  z-index: 2;
 }
 
-.details-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 16px;
-  background: #f8f9fa;
-  padding: 20px;
-  border-radius: 12px;
+.status-slider-thumb:active {
+  cursor: grabbing;
+  transform: translate(-50%, -50%) scale(1.15);
 }
 
-.detail-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.status-slider-dot {
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  border: 2px solid #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 1;
 }
 
-.detail-label {
-  font-size: 12px;
-  color: #888;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.status-slider-dot:hover {
+  transform: translate(-50%, -50%) scale(1.3);
 }
 
-.detail-value {
-  font-size: 16px;
-  font-weight: 500;
-  color: #333;
+.status-slider-dot.active {
+  width: 14px;
+  height: 14px;
 }
 
-/* Участники */
-.event-participants-section {
-  margin-top: 16px;
-}
-
-.participants-header {
+.status-slider-labels {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-  gap: 16px;
+  margin-top: 14px;
+  padding: 0 4px;
 }
 
-.participants-header h3 {
-  font-size: 18px;
-  margin: 0;
+.status-slider-label {
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  font-family: "Kontora", sans-serif;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 4px 2px;
+  border-radius: 6px;
+}
+
+.status-slider-label:hover {
+  color: #003466;
+  background: #f1f5f9;
+}
+
+.status-slider-label.active {
+  font-weight: 700;
+  font-size: 13px;
+}
+
+@media (max-width: 768px) {
+  .status-slider-labels {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .status-slider-label {
+    font-size: 10px;
+    flex: 0 0 calc(33.33% - 4px);
+  }
+
+  .status-slider-label.active {
+    font-size: 11px;
+  }
+
+  .status-slider-thumb {
+    width: 26px;
+    height: 26px;
+  }
+
+  .status-slider-dot {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.eventDetailsDescription {
   color: #333;
+  background-color: #f8fbff;
+  padding: 20px;
+  border-radius: 14px;
+  font-family: "Cantora One", sans-serif;
+  font-size: 25px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  
+  /* Фиксированная высота с прокруткой */
+  min-height: 150px;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+/* Ограничение заголовка в шапке */
+.event-detail-title {
+  font-family: "Kontora", sans-serif;
+  font-weight: 700;
+  font-size: 55px;
+  color: rgba(0, 52, 102, 1);
+  margin: 0;
+  line-height: 1.2;
+  
+  /* Ограничение в 1-2 строки с троеточием */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70%; /* Чтобы не наезжал на бейдж статуса */
+}
+
+/* Ограничение поля "Название" в основной информации */
+.eventDetailsValue {
+  flex: 1;
+  color: #333;
+  
+  /* То же ограничение */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Чтобы в режиме редактирования input не был обрезан */
+.eventDetailsValue .edit-input {
+  display: block;
+  -webkit-line-clamp: none;
+  overflow: visible;
+  width: 100%;
+}
+
+
+
+.export-btn,
+.save-results-btn {
+  padding: 10px 20px;
+  border-radius: 12px;
+  border: 2px solid var(--blueColor);
+  background-color: transparent;
+  color: var(--blueColor);
+  font-family: "Kontora", sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.export-btn:hover:not(:disabled),
+.save-results-btn:hover:not(:disabled) {
+  background-color: var(--blueColor);
+  color: var(--whiteColor);
+  transform: translateY(-1px);
+}
+
+.export-btn:active:not(:disabled),
+.save-results-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.export-btn:disabled,
+.save-results-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: #94a3b8;
+  color: #94a3b8;
 }
 
 .participants-actions {
   display: flex;
-  gap: 12px;
-}
-
-.add-participant-btn, .export-btn, .save-results-btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.add-participant-btn {
-  background: #003466;
-  color: white;
-}
-
-.add-participant-btn:hover {
-  background: #004a8f;
-}
-
-.export-btn {
-  background: #17a2b8;
-  color: white;
-}
-
-.export-btn:hover:not(:disabled) {
-  background: #138496;
-}
-
-.save-results-btn {
-  background: #28a745;
-  color: white;
-}
-
-.save-results-btn:hover:not(:disabled) {
-  background: #218838;
-}
-
-.add-participant-btn:disabled, .export-btn:disabled, .save-results-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.add-participant-form {
-  background: #f8f9fa;
-  padding: 16px;
-  border-radius: 12px;
-  margin-bottom: 20px;
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-/* Регистрация */
-.event-registration {
-  position: sticky;
-  top: 20px;
-  align-self: start;
-}
-
-.registration-card {
-  background: #f8f9fa;
-  border-radius: 16px;
-  padding: 24px;
-  text-align: center;
-}
-
-.registration-card h3 {
-  margin-top: 0;
-  margin-bottom: 20px;
-  color: #333;
-}
-
-.registration-type {
+  gap: 20px;
+  justify-content: flex-end;
   margin-bottom: 20px;
 }
 
-.type-options {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
-}
 
-.type-btn {
-  flex: 1;
-  padding: 12px;
-  border: 2px solid #ddd;
-  background: white;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 500;
-}
 
-.type-btn.active {
-  border-color: #003466;
-  background: #e8f0fe;
-  color: #003466;
-}
-
-.type-info {
-  text-align: left;
-  background: white;
-  padding: 16px;
-  border-radius: 12px;
-  font-size: 14px;
-}
-
-.type-info h4 {
-  margin: 0 0 8px 0;
-  font-size: 16px;
-}
-
-.type-info ul {
-  margin: 0;
-  padding-left: 20px;
-}
-
-.type-info li {
-  margin: 4px 0;
-  color: #555;
-}
-
-.register-btn {
+/* ====== Поля редактирования в стиле системы ====== */
+.edit-input,
+.edit-textarea,
+.edit-select {
   width: 100%;
-  padding: 14px;
-  background: #003466;
-  color: white;
-  border: none;
+  padding: 12px 16px;
+  border: 2px solid #d5e2f1;
   border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
+  background: #ffffff;
+  color: #333;
+  font-family: "Cantora One", sans-serif;
+  font-size: 20px;
+  transition: all 0.25s ease;
+  box-sizing: border-box;
+  outline: none;
+  animation: editFieldAppear 0.3s ease-out;
+}
+
+.edit-input:hover,
+.edit-textarea:hover,
+.edit-select:hover {
+  border-color: #94b8d9;
+  background: #fafcff;
+}
+
+.edit-input:focus,
+.edit-textarea:focus,
+.edit-select:focus {
+  border-color: var(--blueColor);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(0, 52, 102, 0.1);
+}
+
+.edit-textarea {
+  resize: vertical;
+  min-height: 120px;
+  line-height: 1.5;
+  font-family: "Cantora One", sans-serif;
+}
+
+.edit-select {
   cursor: pointer;
-  transition: all 0.2s;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Cpath fill='%23003466' d='M7 10L2 5h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 14px;
+  padding-right: 44px;
 }
 
-.register-btn:hover {
-  background: #004a8f;
+.edit-select option {
+  font-family: "Cantora One", sans-serif;
+  font-size: 18px;
+  padding: 8px;
 }
 
-.registration-success {
-  text-align: center;
-  padding: 20px;
+/* Стили для input[type="number"] — убираем стрелочки */
+.edit-input[type="number"] {
+  -moz-appearance: textfield;
 }
 
-.registration-success h4 {
-  color: #28a745;
+.edit-input[type="number"]::-webkit-outer-spin-button,
+.edit-input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
   margin: 0;
 }
 
-.success-message {
-  margin-top: 12px;
-  padding: 10px;
-  background: #d4edda;
-  color: #155724;
-  border-radius: 8px;
-  font-size: 14px;
+/* Стили для input[type="datetime-local"] */
+.edit-input[type="datetime-local"] {
+  cursor: pointer;
+  position: relative;
 }
 
-/* Тосты */
-.event-toast {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: #28a745;
-  color: white;
-  padding: 12px 24px;
-  border-radius: 8px;
-  z-index: 1000;
-  animation: slideIn 0.3s ease;
+.edit-input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23003466' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 18px;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+  padding: 4px;
+  margin-right: 4px;
 }
 
-.event-toast.error {
-  background: #dc3545;
+.edit-input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
 }
 
-@keyframes slideIn {
+/* Placeholder */
+.edit-input::placeholder,
+.edit-textarea::placeholder {
+  color: #94a3b8;
+  font-family: "Cantora One", sans-serif;
+  font-size: 18px;
+}
+
+/* Анимация появления поля при входе в режим редактирования */
+@keyframes editFieldAppear {
   from {
-    transform: translateX(100%);
     opacity: 0;
+    transform: translateY(-4px);
   }
   to {
-    transform: translateX(0);
     opacity: 1;
+    transform: translateY(0);
   }
 }
 
-/* Страница не найдена */
-.event-detail.not-found {
-  text-align: center;
-  padding: 60px 20px;
+/* Подсветка строки, которая сейчас редактируется */
+.eventDetailsRow:has(.edit-input),
+.eventDetailsRow:has(.edit-textarea),
+.eventDetailsRow:has(.edit-select) {
+  background: #f8fbff;
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-left: -16px;
+  margin-right: -16px;
+  border: 1px solid transparent;
+  transition: all 0.25s ease;
 }
 
-.event-detail.not-found h1 {
-  font-size: 24px;
-  margin-bottom: 16px;
-  color: #333;
+.eventDetailsRow:has(.edit-input):hover,
+.eventDetailsRow:has(.edit-textarea):hover,
+.eventDetailsRow:has(.edit-select):hover {
+  border-color: #d5e2f1;
 }
 
-.event-detail.not-found p {
-  color: #666;
-  margin-bottom: 24px;
+.eventDetailsRow:has(.edit-input:focus-within),
+.eventDetailsRow:has(.edit-textarea:focus-within),
+.eventDetailsRow:has(.edit-select:focus-within) {
+  border-color: var(--blueColor);
+  background: #ffffff;
+  box-shadow: 0 2px 12px rgba(0, 52, 102, 0.08);
 }
 
-/* Иконки */
-.icon {
-  flex-shrink: 0;
+/* Адаптивность */
+@media (max-width: 768px) {
+  .edit-input,
+  .edit-textarea,
+  .edit-select {
+    font-size: 16px;
+    padding: 10px 14px;
+  }
+
+  .edit-textarea {
+    min-height: 100px;
+  }
+
+  .eventDetailsRow:has(.edit-input),
+  .eventDetailsRow:has(.edit-textarea),
+  .eventDetailsRow:has(.edit-select) {
+    margin-left: -8px;
+    margin-right: -8px;
+    padding: 10px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .edit-input,
+  .edit-textarea,
+  .edit-select {
+    font-size: 15px;
+    padding: 8px 12px;
+  }
+}
+
+
+/* Переопределяем overflow для CustomSelect внутри eventDetailsValue */
+.eventDetailsValue .customSelect {
+  overflow: visible !important;
+}
+
+.eventDetailsValue {
+  overflow: visible !important;
+}
+
+/* Ограничение текста применяем только к обычному тексту, не к инпутам и селекторам */
+.eventDetailsValue:not(:has(.customSelect)):not(:has(.edit-input)):not(:has(.status-slider)):not(:has(textarea)) {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* ====== Компактный CustomSelect для формы редактирования мероприятия ====== */
+.eventDetailsValue .customSelect {
+  width: 100%;
+  overflow: visible !important;
+}
+
+.eventDetailsValue .customSelect__trigger {
+  width: 100%;
+  height: 56px;
+  font-size: 20px;
+  padding: 0 50px 0 20px;
+  border-radius: 12px;
+  border: 2px solid #d5e2f1;
+  background: #ffffff;
+  color: var(--blueColor);
+  transition: all 0.25s ease;
+}
+
+.eventDetailsValue .customSelect__trigger:hover {
+  border-color: #94b8d9;
+  background: #fafcff;
+}
+
+.eventDetailsValue .customSelect--open .customSelect__trigger {
+  border-color: var(--blueColor);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(0, 52, 102, 0.1);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.eventDetailsValue .customSelect__value {
+  font-size: 20px;
+  font-family: "Cantora One", sans-serif;
+}
+
+.eventDetailsValue .customSelect__value--placeholder {
+  color: #94a3b8;
+}
+
+.eventDetailsValue .customSelect__arrow {
+  width: 16px;
+  height: 16px;
+}
+
+.eventDetailsValue .customSelect__dropdown {
+  border-radius: 0 0 12px 12px;
+  border: 2px solid var(--blueColor);
+  border-top: none;
+}
+
+.eventDetailsValue .customSelect__list {
+  max-height: 240px;
+  padding: 6px 0;
+}
+
+.eventDetailsValue .customSelect__option {
+  font-size: 18px;
+  padding: 12px 20px;
+  font-family: "Cantora One", sans-serif;
+}
+
+/* Поднимаем открытый селект поверх других элементов */
+.eventDetailsValue .customSelect--open {
+  position: relative;
+  z-index: 1000;
+}
+
+.eventDetailsValue .customSelect__dropdown {
+  z-index: 1001;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .eventDetailsValue .customSelect__trigger {
+    height: 48px;
+    font-size: 16px;
+    padding: 0 44px 0 16px;
+  }
+
+  .eventDetailsValue .customSelect__value {
+    font-size: 16px;
+  }
+
+  .eventDetailsValue .customSelect__option {
+    font-size: 16px;
+    padding: 10px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .eventDetailsValue .customSelect__trigger {
+    height: 44px;
+    font-size: 15px;
+  }
+
+  .eventDetailsValue .customSelect__option {
+    font-size: 15px;
+  }
 }

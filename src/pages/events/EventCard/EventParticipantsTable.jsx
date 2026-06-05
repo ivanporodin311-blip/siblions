@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import "./EventParticipantsTable.css";
 
 const EditIcon = () => (
@@ -16,6 +16,28 @@ const EventParticipantsTable = ({
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({ name: "", group: "", school: "" });
   const editingRowRef = useRef(null);
+  
+  // Отдельное состояние для баллов каждого участника
+  const [pointsMap, setPointsMap] = useState(() => {
+    const map = {};
+    participants.forEach(p => {
+      map[p.id] = p.points || 0;
+    });
+    return map;
+  });
+
+  // Обновляем pointsMap при изменении списка участников
+  useEffect(() => {
+    setPointsMap(prev => {
+      const newMap = { ...prev };
+      participants.forEach(p => {
+        if (newMap[p.id] === undefined) {
+          newMap[p.id] = p.points || 0;
+        }
+      });
+      return newMap;
+    });
+  }, [participants]);
 
   const handleEditClick = (participant) => {
     if (editingId === participant.id) {
@@ -43,6 +65,13 @@ const EventParticipantsTable = ({
     return () => document.removeEventListener("mousedown", handleMouseDown);
   }, [editingId, editForm, onEditParticipant]);
 
+  // Обработчик изменения баллов
+  const handlePointsInputChange = (participantId, value) => {
+    const num = value === "" ? 0 : Math.max(0, parseInt(value, 10) || 0);
+    setPointsMap(prev => ({ ...prev, [participantId]: num }));
+    onPointsChange(participantId, num);
+  };
+
   return (
     <div className="participantsTable">
       <div className="tableHeader">
@@ -50,8 +79,6 @@ const EventParticipantsTable = ({
           <div className="tableCell edit"></div>
           <div className="tableCell number">№</div>
           <div className="tableCell name">ФИО</div>
-          <div className="tableCell group">Группа</div>
-          <div className="tableCell school">Школа</div>
           <div className="tableCell points">Баллы</div>
           <div className="tableCell total">Общие баллы</div>
         </div>
@@ -87,34 +114,12 @@ const EventParticipantsTable = ({
                     placeholder="ФИО"
                   />
                 </div>
-                <div className="tableCell group">
-                  <input
-                    type="text"
-                    className="tableEditInput"
-                    value={editForm.group}
-                    onChange={(e) => setEditForm((f) => ({ ...f, group: e.target.value }))}
-                    placeholder="Группа"
-                  />
-                </div>
-                <div className="tableCell school">
-                  <input
-                    type="text"
-                    className="tableEditInput"
-                    value={editForm.school}
-                    onChange={(e) => setEditForm((f) => ({ ...f, school: e.target.value }))}
-                    placeholder="Школа"
-                  />
-                </div>
                 <div className="tableCell points">
                   <input
                     type="number"
                     min={0}
-                    value={participant.points || ""}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      const num = val === "" ? 0 : Math.max(0, parseInt(val, 10) || 0);
-                      onPointsChange(participant.id, num);
-                    }}
+                    value={pointsMap[participant.id] || ""}
+                    onChange={(e) => handlePointsInputChange(participant.id, e.target.value)}
                     className="pointsInput"
                     placeholder="0"
                   />
@@ -126,18 +131,12 @@ const EventParticipantsTable = ({
             ) : (
               <>
                 <div className="tableCell name">{participant.name}</div>
-                <div className="tableCell group">{participant.group}</div>
-                <div className="tableCell school">{participant.school}</div>
                 <div className="tableCell points">
                   <input
                     type="number"
                     min={0}
-                    value={participant.points || ""}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      const num = val === "" ? 0 : Math.max(0, parseInt(val, 10) || 0);
-                      onPointsChange(participant.id, num);
-                    }}
+                    value={pointsMap[participant.id] || ""}
+                    onChange={(e) => handlePointsInputChange(participant.id, e.target.value)}
                     className="pointsInput"
                     placeholder="0"
                   />

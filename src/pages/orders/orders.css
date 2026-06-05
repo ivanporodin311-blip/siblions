@@ -97,13 +97,13 @@
 }
 
 .ordersTable td {
-  vertical-align: top;
+  vertical-align: middle;
 }
 
-/* Равномерное распределение колонок */
+/* Равномерное распределение колонок (пересчитано под новую колонку) */
 .ordersTable th.orderNumber,
 .ordersTable td.orderNumber {
-  width: 8%;
+  width: 6%;
   text-align: center;
   font-weight: 600;
   color: #003466;
@@ -111,13 +111,13 @@
 
 .ordersTable th.orderCustomer,
 .ordersTable td.orderCustomer {
-  width: 30%;
-  text-align: left;
+  width: 24%;
+  text-align: center;
 }
 
 .ordersTable th.orderGroup,
 .ordersTable td.orderGroup {
-  width: 18%;
+  width: 14%;
   text-align: center;
 }
 
@@ -125,15 +125,35 @@
   font-weight: 500;
 }
 
+.loadingText {
+  font-family: "Kontora", sans-serif;
+  font-size: 18px;
+  color: rgba(0, 52, 102, 1);
+  text-align: center;
+  padding: 40px;
+  background: #f8fafc;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
 .ordersTable th.orderProducts,
 .ordersTable td.orderProducts {
-  width: 28%;
-  text-align: left;
+  width: 24%;
+  text-align: center;
 }
 
 .ordersTable th.orderStatus,
 .ordersTable td.orderStatus {
-  width: 16%;
+  width: 18%;
+  text-align: center;
+}
+
+/* Новая колонка с кнопкой сохранения */
+.ordersTable th.orderAction,
+.ordersTable td.orderAction {
+  width: 14%;
+  text-align: center;
+  vertical-align: middle;
 }
 
 /* Товары в столбик */
@@ -173,32 +193,48 @@
   box-shadow: 0 0 0 2px rgba(0, 52, 102, 0.1);
 }
 
-/* Кнопки действий */
-.actionButtons {
-  display: flex;
-  gap: 20px;
-  justify-content: flex-end;
-  padding: 20px 30px;
-  background: #ffffff;
-  border-top: 1px solid #f1f5f9;
+.statusSelect:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #f1f5f9;
 }
 
-.saveButton {
-  padding: 12px 24px;
+/* Кнопка сохранения для строки заказа */
+.saveRowButton {
+  padding: 8px 16px;
   border-radius: 8px;
   border: 1px solid #003466;
   background: #003466;
   color: #ffffff;
   font-family: "Kontora", sans-serif;
   font-weight: 500;
-  font-size: 15px;
+  font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
+  animation: ordersFadeInButton 0.2s ease-out;
 }
 
-.saveButton:hover {
+.saveRowButton:hover:not(:disabled) {
   background: #004d97;
   border-color: #004d97;
+  transform: translateY(-1px);
+}
+
+.saveRowButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@keyframes ordersFadeInButton {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .noOrdersContainer {
@@ -247,8 +283,11 @@
   .ordersTable th.orderProducts,
   .ordersTable td.orderProducts,
   .ordersTable th.orderStatus,
-  .ordersTable td.orderStatus {
+  .ordersTable td.orderStatus,
+  .ordersTable th.orderAction,
+  .ordersTable td.orderAction {
     padding-left: 8px;
+    padding-right: 8px;
   }
 
   .ordersPageTitle {
@@ -256,15 +295,68 @@
     margin-bottom: 30px;
   }
 
-  .actionButtons {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .saveButton {
-    width: 100%;
-    justify-content: center;
+  .saveRowButton {
+    padding: 6px 12px;
+    font-size: 13px;
   }
 }
 
 
+
+/* ====== Компактный CustomSelect для таблицы заказов ====== */
+.ordersCustomSelectWrapper {
+  width: 100%;
+}
+
+.ordersCustomSelectWrapper .customSelect {
+  width: 100%;
+}
+
+.ordersCustomSelectWrapper .customSelect__trigger {
+  width: 100%;
+  height: 44px;
+  font-size: 14px;
+  padding: 0 40px 0 14px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.ordersCustomSelectWrapper .customSelect__trigger:hover {
+  border-color: #94b8d9;
+}
+
+.ordersCustomSelectWrapper .customSelect--open .customSelect__trigger {
+  border-color: var(--blueColor);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.ordersCustomSelectWrapper .customSelect__value {
+  font-size: 14px;
+}
+
+.ordersCustomSelectWrapper .customSelect__arrow {
+  width: 14px;
+  height: 14px;
+}
+
+.ordersCustomSelectWrapper .customSelect__dropdown {
+  border-radius: 0 0 8px 8px;
+  border-color: var(--blueColor);
+}
+
+.ordersCustomSelectWrapper .customSelect__list {
+  max-height: 200px;
+  padding: 4px 0;
+}
+
+.ordersCustomSelectWrapper .customSelect__option {
+  font-size: 14px;
+  padding: 10px 14px;
+}
+
+/* Поднимаем открытый селект поверх других строк таблицы */
+.ordersCustomSelectWrapper .customSelect--open {
+  position: relative;
+  z-index: 100;
+}
