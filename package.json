@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://shabekoslava.github.io/siblions/",
+  "homepage": "https://ivanporodin311-blip.github.io/siblions/",
   "scripts": {
     "dev": "vite",
     "gandon": "vite",
